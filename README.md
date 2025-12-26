@@ -1,4 +1,4 @@
-# QMK Userspace
+# QMK Userspace (Orginal)
 
 This is a template repository which allows for an external set of QMK keymaps to be defined and compiled. This is useful for users who want to maintain their own keymaps without having to fork the main QMK repository.
 
@@ -57,3 +57,29 @@ This can also be used to control which fork is used, though only upstream `qmk_f
 1. (First time only) `git submodule add https://github.com/qmk/qmk_firmware.git`
 1. (To update) `git submodule update --init --recursive`
 1. Commit your changes to your userspace repository
+
+
+# My Setup
+My setup was as follows:
+- Install QMK in WSL2.
+- Fork and clone the QMK-Userspace repo
+- Set config for QMK
+- Compile through QMK
+- Flash through [QMK-Toolbox](https://github.com/qmk/qmk_toolbox/releases/tag/0.3.3)
+
+## QMK Install
+This is outlined [here](https://docs.qmk.fm/newbs_getting_started). Here's a streamlined version:
+1. Run `curl -fsSL https://install.qmk.fm | sh`
+2. Run `qmk setup`
+
+## Set config for QMK
+I ran the following commands:
+- `qmk config user.keyboard=keebio/iris/rev6`
+- `qmk config user.overlaydir=/path/to/this/repo`
+- `qmk user.qmk_home=/path/to/qmk_firmware`
+
+The overlay_dir can be in the Windows drive. The QMK home should be in the WSL2 drive (ie. `/home/<user>/qmk_firmware`).
+
+## Compile through QMK
+I then ran the following command to generate the hex locally: ` qmk compile -kb keebio/iris/rev6 -km v2`.
+
