@@ -1,50 +1,60 @@
 #include QMK_KEYBOARD_H
 
-
+// ==========================================================================
+// 1. LAYER DEFINITIONS & SHORTCUTS
+// ==========================================================================
 #define _QWERTY 0
-#define _SYM 1
-#define _FN 2
-#define _NAV 3
+#define _SYM    1
+#define _FN     2
+#define _NAV    3
 #define _GAMING 4
 
-#define GUI_A MT(MOD_LGUI, KC_A)
-#define ALT_S MT(MOD_LALT, KC_S)
-#define CTL_D MT(MOD_LCTL, KC_D)
-#define SFT_F MT(MOD_LSFT, KC_F)
+// Home Row Mods: Hold for Modifier, Tap for Key (Left Hand)
+#define GUI_A   MT(MOD_LGUI, KC_A)
+#define ALT_S   MT(MOD_LALT, KC_S)
+#define CTL_D   MT(MOD_LCTL, KC_D)
+#define SFT_F   MT(MOD_LSFT, KC_F)
 
-#define SFT_J MT(MOD_RGUI, KC_J)
-#define CTL_K MT(MOD_RALT, KC_K)
-#define ALT_L MT(MOD_RCTL, KC_L)
+// Home Row Mods: Hold for Modifier, Tap for Key (Right Hand)
+#define SFT_J   MT(MOD_RGUI, KC_J)
+#define CTL_K   MT(MOD_RALT, KC_K)
+#define ALT_L   MT(MOD_RCTL, KC_L)
 #define GUI_SCLN MT(MOD_RSFT, KC_SCLN)
 
+// Dual-function Thumb Keys: Hold for Layer, Tap for Key
 #define ENT_SYM LT(_SYM, KC_ENT)
 #define SPC_NAV LT(_NAV, KC_SPC)
 
+// Custom keycodes for unique macros and layer toggles
 enum custom_keycodes {
   QWERTY = SAFE_RANGE,
-  SYMBOLS, // PROGRAMMING SYMBOLS
+  SYMBOLS,
   NUM,
   NAV,
   GAMING,
-  PREVWIN,
-  NEXTWIN,
+  PREVWIN, // Custom Alt-Tab (Backward)
+  NEXTWIN, // Custom Alt-Tab (Forward)
   REDO
 };
 
-bool is_alt_tab_active = false;
-uint16_t alt_tab_timer = 0;
+// ==========================================================================
+// 2. STATE VARIABLES & LIGHTING CONFIG
+// ==========================================================================
+bool is_alt_tab_active = false;  // Tracks if the Alt-Tab overlay is currently open
+uint16_t alt_tab_timer = 0;     // Timer to auto-release Alt after a timeout
 
+// RGB Colors for layers and caps lock
+uint8_t colourDefault[] = {57, 184, 255}; // Light Blue
+uint8_t colourGaming[]  = {255, 0, 0};    // Red
 
-uint8_t colourDefault[] = {57, 184, 255};   //default underglow colour
-uint8_t colourGaming[] = {255, 0, 0};       //mouse layer underglow colour
-
-
-
+// LED Index Mapping (Iris Rev 6 specific)
 int underglowLED[6] = {28, 29, 30, 31, 32, 33};
 int backlightLEDinner[15] = {6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22};
 int backlightLEDall[28] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27};
 
-const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+// ==========================================================================
+// 3. KEYMAPS (Layers)
+// ==========================================================================
 
   [_QWERTY] = LAYOUT(
   //┌────────┬────────────────────┬───────────────────┬───────────────────┬───────────────────┬────────────┐                              ┌───────────┬───────────────────────┬───────────────────┬───────────────────┬───────────────────────┬────────┐
@@ -118,78 +128,54 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 };
 
+
+// ==========================================================================
+// 4. CORE LOGIC & CUSTOM BEHAVIOR
+// ==========================================================================
+
+/**
+ * Custom Tapping Term: Adjusts how long you must hold a key for it to become a modifier.
+ * Improves Home Row Mod accuracy by making index fingers faster and pinkies more deliberate.
+ */
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
     case SFT_F:
     case SFT_J:
-      return TAPPING_TERM - 30;
+      return TAPPING_TERM - 30; // Faster response for index fingers
     case GUI_SCLN:
     case GUI_A:
-      return TAPPING_TERM + 70;
+      return TAPPING_TERM + 70; // More delay for pinkies to prevent accidental triggers
     default:
       return TAPPING_TERM;
   }
 }
 
-
+/**
+ * Custom Keycode Handler: Manages Layer switching and the persistent Alt-Tab macro.
+ */
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
+    // Persistent Layer Changes
     case QWERTY:
-      if (record->event.pressed) {
-        set_single_persistent_default_layer(_QWERTY);
-      }
+      if (record->event.pressed) { set_single_persistent_default_layer(_QWERTY); }
       return false;
-      break;
 
-    case SYMBOLS:
-      if (record->event.pressed) {
-        layer_on(_SYM);
-      } else {
-        layer_off(_SYM);
-      }
-      return false;
-      break;
-
-    case NAV:
-      if (record->event.pressed) {
-        layer_on(_NAV);
-      } else {
-        layer_off(_NAV);
-      }
-      return false;
-      break;
-
-    case GAMING:
-      if (record->event.pressed) {
-        layer_on(_GAMING);
-      } else {
-        layer_off(_GAMING);
-      }
-      return false;
-      break;
-
-    case NEXTWIN: // ALT+TAB
+    // Alt-Tab Macros (Forward and Backward)
+    case NEXTWIN:
+    case PREVWIN:
       if (record->event.pressed) {
         if (!is_alt_tab_active) {
           is_alt_tab_active = true;
-          register_code(KC_LALT);
+          register_code(KC_LALT); // Hold Alt down
         }
-        alt_tab_timer = timer_read();
-        register_code(KC_TAB);
+        alt_tab_timer = timer_read(); // Reset auto-release timer
+        if (keycode == NEXTWIN) {
+            register_code(KC_TAB);
+        } else {
+            register_code16(S(KC_TAB)); // Shift+Tab for backward
+        }
       } else {
         unregister_code(KC_TAB);
-      }
-      break;
-
-    case PREVWIN: // ALT+SHIFT+TAB
-      if (record->event.pressed) {
-        if (!is_alt_tab_active) {
-          is_alt_tab_active = true;
-          register_code(KC_LALT);
-        }
-        alt_tab_timer = timer_read();
-        register_code16(S(KC_TAB));
-      } else {
         unregister_code16(S(KC_TAB));
       }
       break;
@@ -197,26 +183,28 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   return true;
 }
 
+/**
+ * Matrix Scan: Runs constantly. Used here to release the 'Alt' key
+ * if you haven't pressed the Alt-Tab keys for 600ms.
+ */
 void matrix_scan_user(void) {
-  if (is_alt_tab_active) {
-    if (timer_elapsed(alt_tab_timer) > 600) {
-      unregister_code(KC_LALT);
-      is_alt_tab_active = false;
-    }
+  if (is_alt_tab_active && timer_elapsed(alt_tab_timer) > 600) {
+    unregister_code(KC_LALT);
+    is_alt_tab_active = false;
   }
 }
 
+/**
+ * RGB Indicators: Updates the LEDs based on keyboard state.
+ */
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    // Set capslock indicator
+    // 1. Caps Lock Indicator (Keys 25 and 12 turn Red)
     if (host_keyboard_led_state().caps_lock) {
-        for (uint8_t i = led_min; i < led_max; i++) {
-            if (g_led_config.flags[i] & LED_FLAG_KEYLIGHT) {
-                rgb_matrix_set_color(25, RGB_RED);
-                rgb_matrix_set_color(12, RGB_RED);
-            }
-        }
+        rgb_matrix_set_color(25, RGB_RED);
+        rgb_matrix_set_color(12, RGB_RED);
     }
 
+    // 2. Global Layer Colors (Sets the theme for the entire board)
     for (uint8_t i = led_min; i < led_max; i++) {
         switch(get_highest_layer(layer_state|default_layer_state)) {
             case _GAMING:

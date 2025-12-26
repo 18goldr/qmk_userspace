@@ -17,15 +17,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+// Sets how many times you must tap a one-shot key to make it "stick" (toggle).
+// Useful for layer-toggle keys if you want to lock a layer on.
 #define TAPPING_TOGGLE 2
 
+// Enables the 'get_tapping_term' function in your keymap.c.
+// This allows you to set different timings for different keys (like your home row mods).
 #define TAPPING_TERM_PER_KEY
 
+// The default time (in milliseconds) a key must be held to register as a modifier.
+// At 180ms, this is a relatively "fast" setting, good for quick typists.
 #define TAPPING_TERM 180
-// #define USE_I2C
+
+// Tells QMK to look at the EEPROM (on-board memory) to determine which half is left/right.
+// This allows you to plug the USB cable into either side of the Iris.
 #define EE_HANDS
 
+// Ensures that both halves of the split keyboard stay in sync regarding which
+// layer is currently active, so RGB indicators work correctly on both sides.
 #define SPLIT_LAYER_STATE_ENABLE
-
-//#undef RGB_MATRIX_MAXIMUM_BRIGHTNESS
-//#define RGB_MATRIX_MAXIMUM_BRIGHTNESS 50
