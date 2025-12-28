@@ -36,7 +36,7 @@ enum custom_keycodes {
   GAMING,
   PREVWIN, // Custom Alt-Tab (Backward)
   NEXTWIN, // Custom Alt-Tab (Forward)
-  REDO
+  LONG_TOGGLE_GAMING
 };
 
 // ==========================================================================
@@ -44,6 +44,11 @@ enum custom_keycodes {
 // ==========================================================================
 bool is_alt_tab_active = false;  // Tracks if the Alt-Tab overlay is currently open
 uint16_t alt_tab_timer = 0;     // Timer to auto-release Alt after a timeout
+
+uint16_t toggle_hold_timer = 0;
+bool toggle_key_pressed = false;
+bool toggle_threshold_met = false; // Prevents rapid flickering while holding
+
 
 // RGB Colors for layers and caps lock
 uint8_t colourDefault[] = {57, 184, 255}; // Light Blue
@@ -54,22 +59,23 @@ int underglowLED[6] = {28, 29, 30, 31, 32, 33};
 int backlightLEDinner[15] = {6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22};
 int backlightLEDall[28] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27};
 
+
 // ==========================================================================
 // 3. KEYMAPS (Layers)
 // ==========================================================================
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [_QWERTY] = LAYOUT(
-  //┌────────┬────────────────────┬───────────────────┬───────────────────┬───────────────────┬────────────┐                              ┌───────────┬───────────────────────┬───────────────────┬───────────────────┬───────────────────────┬────────┐
-     KC_GRV,    KC_1,                     KC_2,                KC_3,            KC_4,              KC_5,                                          KC_6,            KC_7,               KC_8,                KC_9,               KC_0,             KC_ESC,
-  //├────────┼────────────────────┼───────────────────┼───────────────────┼───────────────────┼────────────┤                              ├───────────┼───────────────────────┼───────────────────┼───────────────────┼───────────────────────┼────────┼
-     KC_LBRC,   KC_Q,                     KC_W,              KC_E,            KC_R,              KC_T,                                          KC_Y,            KC_U,                KC_I,                KC_O,               KC_SCLN,          KC_QUOT,
-  //├────────┼────────────────────┼───────────────────┼───────────────────┼───────────────────┼────────────┤                              ├───────────┼───────────────────────┼───────────────────┼───────────────────┼───────────────────────┼────────┼
-     KC_LCBR,   MT(MOD_LGUI, KC_A), MT(MOD_LALT, KC_S), MT(MOD_LCTL, KC_D), MT(MOD_LSFT, KC_F),  KC_G,                                          KC_H,      MT(MOD_RSFT, KC_J),  MT(MOD_RCTL, KC_K), MT(MOD_LALT, KC_L), MT(MOD_RGUI, KC_P),    KC_BSPC,
-  //├────────┼────────────────────┼───────────────────┼───────────────────┼───────────────────┼────────────┼─────────┐           ┌────────┴───────────┼───────────────────────┼───────────────────┼───────────────────┼───────────────────────┼────────┼
-     KC_TAB,   KC_Z,                   KC_X,                 KC_C,                KC_V,          KC_B,      MO(_FN),              TG(_GAMING),  KC_N,          KC_M,               KC_COMM,              KC_DOT,              KC_SLSH,          KC_BSLS,
-  //└────────┴────────────────────┴───────────────────┴───────────────────┬───────────────────┴────────────┴─────────┘           └────────┴───────────┴───────────────────────┴───────────────────┴───────────────────┴───────────────────────┴────────┘
-                                                                             PREVWIN,      MO(_SYM),         ENT_SYM,            SPC_NAV,     MO(_NAV),   NEXTWIN
-                                               //                         └──────────────┴─────────────────┴─────────┘           └────────┴────────────┴──────────┘
+  //┌────────┬────────────────────┬───────────────────┬───────────────────┬───────────────────┬────────────┐                                          ┌───────────┬───────────────────────┬───────────────────┬───────────────────┬───────────────────────┬────────┐
+     KC_GRV,    KC_1,                     KC_2,                KC_3,            KC_4,              KC_5,                                                   KC_6,            KC_7,               KC_8,                KC_9,               KC_0,             KC_ESC,
+  //├────────┼────────────────────┼───────────────────┼───────────────────┼───────────────────┼────────────┤                                          ├───────────┼───────────────────────┼───────────────────┼───────────────────┼───────────────────────┼────────┼
+     KC_LBRC,   KC_Q,                     KC_W,              KC_E,            KC_R,              KC_T,                                                    KC_Y,            KC_U,                KC_I,                KC_O,               KC_SCLN,          KC_QUOT,
+  //├────────┼────────────────────┼───────────────────┼───────────────────┼───────────────────┼────────────┤                                          ├───────────┼───────────────────────┼───────────────────┼───────────────────┼───────────────────────┼────────┼
+     KC_LCBR,   MT(MOD_LGUI, KC_A), MT(MOD_LALT, KC_S), MT(MOD_LCTL, KC_D), MT(MOD_LSFT, KC_F),  KC_G,                                                    KC_H,      MT(MOD_RSFT, KC_J),  MT(MOD_RCTL, KC_K), MT(MOD_LALT, KC_L), MT(MOD_RGUI, KC_P),    KC_BSPC,
+  //├────────┼────────────────────┼───────────────────┼───────────────────┼───────────────────┼────────────┼─────────┐           ┌────────────────────┴───────────┼───────────────────────┼───────────────────┼───────────────────┼───────────────────────┼────────┼
+     KC_TAB,   KC_Z,                   KC_X,                 KC_C,                KC_V,          KC_B,      MO(_FN),              LONG_TOGGLE_GAMING,  KC_N,          KC_M,               KC_COMM,              KC_DOT,              KC_SLSH,          KC_BSLS,
+  //└────────┴────────────────────┴───────────────────┴───────────────────┬───────────────────┴────────────┴─────────┘           └────────────────────┴───────────┴───────────────────────┴───────────────────┴───────────────────┴───────────────────────┴────────┘
+                                                                             PREVWIN,      MO(_SYM),         ENT_SYM,            SPC_NAV,                MO(_NAV),   NEXTWIN
+                                               //                         └──────────────┴─────────────────┴─────────┘           └────────────────────┴────────────┴──────────┘
   ),
 
   [_SYM] = LAYOUT(
@@ -123,7 +129,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     //├────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────────┤
        KC_LSFT, KC_A,    KC_S,    KC_D,    KC_F,    _______,                            _______,   KC_J,    KC_K,    KC_L,  KC_P,     _______,
     //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐        ┌────────┼────────┼────────┼────────┼────────┼────────┼────────────┤
-       KC_LCTL, _______, _______, _______, _______, _______, TG(_GAMING),    TG(_GAMING),_______, _______, _______, _______, _______, _______,
+       KC_LCTL, _______, _______, _______, _______, _______,LONG_TOGGLE_GAMING,LONG_TOGGLE_GAMING,_______, _______, _______, _______, _______, _______,
     //└────────┴────────┴────────┴───┬────┴───┬────┴───┬────┴───┬────┘        └───┬────┴───┬────┴───┬────┴───┬────┴────────┴────────┴────────────┘
                                       _______,  KC_SPC,  KC_ENT,                    _______, _______,  _______
     //                               └────────┴────────┴────────┘                 └────────┴────────┴────────┘
@@ -181,6 +187,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         unregister_code16(S(KC_TAB));
       }
       break;
+
+	case LONG_TOGGLE_GAMING:
+		if (record->event.pressed) {
+        	toggle_key_pressed = true;
+        	toggle_threshold_met = false; // Reset lock for a new press
+        	toggle_hold_timer = timer_read();
+    	} else {
+       		toggle_key_pressed = false;
+    	}
+    	return false;
   }
   return true;
 }
@@ -190,10 +206,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
  * if you haven't pressed the Alt-Tab keys for 600ms.
  */
 void matrix_scan_user(void) {
-  if (is_alt_tab_active && timer_elapsed(alt_tab_timer) > 600) {
-    unregister_code(KC_LALT);
-    is_alt_tab_active = false;
-  }
+  	if (is_alt_tab_active && timer_elapsed(alt_tab_timer) > 600) {
+    	unregister_code(KC_LALT);
+    	is_alt_tab_active = false;
+  	}
+
+	if (toggle_key_pressed && !toggle_threshold_met) {
+        if (timer_elapsed(toggle_hold_timer) > 1500) { // 1.5 second threshold
+            layer_invert(_GAMING);   // Turns _GAMING on if off, or off if on
+            toggle_threshold_met = true; // Lock the action so it doesn't toggle again
+        }
+    }
 }
 
 /**
