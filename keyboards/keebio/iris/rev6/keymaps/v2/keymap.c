@@ -2,159 +2,27 @@
 #include "os_detection.h" // Needed for debug and stability
 #include <keymap_introspection.h>
 
-// ==========================================================================
-// 1. LAYER DEFINITIONS & SHORTCUTS
-// ==========================================================================
-#define _QWERTY 0
-#define _SYM    1
-#define _FN     2
-#define _NAV    3
-#define _GAMING 4
-
-// Home Row Mods: Hold for Modifier, Tap for Key (Left Hand)
-#define GUI_A   MT(MOD_LGUI, KC_A)
-#define ALT_S   LALT_T(KC_S)
-#define CTL_D   MT(MOD_LCTL, KC_D)
-#define SFT_F   LSFT_T(KC_F)
-
-// Home Row Mods: Hold for Modifier, Tap for Key (Right Hand)
-#define SFT_J RSFT_T(KC_J)
-#define CTL_K MT(MOD_RCTL, KC_K)
-#define ALT_L RALT_T(KC_L)
-#define GUI_SCLN MT(MOD_RGUI, KC_SCLN)
-
-// Dual-function Thumb Keys: Hold for Layer, Tap for Key
-#define ENT_SYM LT(_SYM, KC_ENT)
-#define SPC_NAV LT(_NAV, KC_SPC)
-
-// Custom keycodes for unique macros and layer toggles
-enum custom_keycodes {
-  QWERTY = SAFE_RANGE,
-  SYMBOLS,
-  NUM,
-  NAV,
-  GAMING,
-  PREVWIN, // Custom Alt-Tab (Backward)
-  NEXTWIN, // Custom Alt-Tab (Forward)
-  LONG_TOGGLE_GAMING
-};
-
-// ==========================================================================
-// 2. STATE VARIABLES & LIGHTING CONFIG
-// ==========================================================================
-bool is_alt_tab_active = false;  // Tracks if the Alt-Tab overlay is currently open
-uint16_t alt_tab_timer = 0;     // Timer to auto-release Alt after a timeout
-
-uint16_t toggle_hold_timer = 0;
-bool toggle_key_pressed = false;
-bool toggle_threshold_met = false; // Prevents rapid flickering while holding
-
-
-// RGB Colors for layers and caps lock
-uint8_t colourDefault[] = {57, 184, 255}; // Light Blue
-uint8_t colourGaming[]  = {255, 0, 0};    // Red
-
-// LED Index Mapping (Iris Rev 6 specific)
-int underglowLED[6] = {28, 29, 30, 31, 32, 33};
-int backlightLEDinner[15] = {6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22};
-int backlightLEDall[28] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27};
-
-
-// ==========================================================================
-// 3. KEYMAPS (Layers)
-// ==========================================================================
-const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-  [_QWERTY] = LAYOUT(
-  //┌────────┬────────────────────┬───────────────────┬───────────────────┬───────────────────┬────────────┐                                          ┌───────────┬───────────────────────┬───────────────────┬───────────────────┬───────────────────────┬────────┐
-     KC_GRV,    KC_1,                     KC_2,                KC_3,            KC_4,              KC_5,                                                   KC_6,            KC_7,               KC_8,                KC_9,               KC_0,             KC_ESC,
-  //├────────┼────────────────────┼───────────────────┼───────────────────┼───────────────────┼────────────┤                                          ├───────────┼───────────────────────┼───────────────────┼───────────────────┼───────────────────────┼────────┼
-     KC_LBRC,   KC_Q,                     KC_W,              KC_E,            KC_R,              KC_T,                                                    KC_Y,            KC_U,                KC_I,                KC_O,               KC_SCLN,          KC_QUOT,
-  //├────────┼────────────────────┼───────────────────┼───────────────────┼───────────────────┼────────────┤                                          ├───────────┼───────────────────────┼───────────────────┼───────────────────┼───────────────────────┼────────┼
-     KC_LCBR,   MT(MOD_LGUI, KC_A), MT(MOD_LALT, KC_S), MT(MOD_LCTL, KC_D), MT(MOD_LSFT, KC_F),  KC_G,                                                    KC_H,      MT(MOD_RSFT, KC_J),  MT(MOD_RCTL, KC_K), MT(MOD_LALT, KC_L), MT(MOD_RGUI, KC_P),    KC_BSPC,
-  //├────────┼────────────────────┼───────────────────┼───────────────────┼───────────────────┼────────────┼─────────┐           ┌────────────────────┴───────────┼───────────────────────┼───────────────────┼───────────────────┼───────────────────────┼────────┼
-     KC_TAB,   KC_Z,                   KC_X,                 KC_C,                KC_V,          KC_B,      MO(_FN),              LONG_TOGGLE_GAMING,  KC_N,          KC_M,               KC_COMM,              KC_DOT,              KC_SLSH,          KC_BSLS,
-  //└────────┴────────────────────┴───────────────────┴───────────────────┬───────────────────┴────────────┴─────────┘           └────────────────────┴───────────┴───────────────────────┴───────────────────┴───────────────────┴───────────────────────┴────────┘
-                                                                             PREVWIN,      MO(_SYM),         ENT_SYM,            SPC_NAV,                MO(_NAV),   NEXTWIN
-                                               //                         └──────────────┴─────────────────┴─────────┘           └────────────────────┴────────────┴──────────┘
-  ),
-
-  [_SYM] = LAYOUT(
-    //┌─────────────┬────────┬────────┬────────┬────────┬────────┐                          ┌────────┬────────┬────────┬────────┬────────┬────────┐
-        _______,      _______, _______, _______, _______, KC_LBRC,                            KC_RBRC,   _______, _______, _______, _______, _______,
-    //├─────────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
-       _______,      _______, _______, _______, _______, KC_LPRN,                            KC_RPRN, _______, _______, _______ ,_______ , _______,
-    //├─────────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
-       KC_CAPS,      KC_MINS, KC_PLUS,KC_UNDS, KC_EQL,  KC_LCBR,                            KC_RCBR, _______, _______, _______, _______ , _______,
-    //├─────────────┼────────┼────────┼────────┼────────┼────────┼────────┐        ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-       _______,      _______, _______, _______, _______, KC_LT, _______,          _______,  KC_GT, _______, _______, _______, _______, _______,
-    //└─────────────┴────────┴────────┴────────┴───┬────────────┼─────────┘        └───┬────┴───┬────┴───┬────┴───┬────┴────────┴────────┴────────┘
-                                        _______,     _______,     _______,              _______, _______, _______
-                                   // └────────────┴────────────┴─────────┘            └────────┴────────┴────────┘
-  ),
-
-  [_FN] = LAYOUT(
-    //┌──────────────┬────────┬────────┬────────┬────────┬────────┐                          ┌────────┬────────┬────────┬────────┬────────┬────────┐
-        KC_F12,       KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,                              KC_F6,   KC_F7,    KC_F8,  KC_F9,   KC_F10,  KC_F11,
-    //├──────────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
-        _______,       _______, _______,_______, _______, _______,                             _______, _______, _______, _______, _______,  KC_F12,
-    //├──────────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
-        _______,       _______, _______,_______, _______, _______,                            _______, _______, _______, _______, _______, _______,
-    //├──────────────┼────────┼────────┼────────┼────────┼────────┼────────┐        ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-        _______,       _______, _______,_______, _______,  _______, _______,          _______,  _______, _______, _______, _______, _______, _______,
-    //└──────────────┴────────┴────────┴────────┴───┬────────────┼─────────┘        └───┬────┴───┬────┴───┬────┴───┬────┴────────┴────────┴────────┘
-                                        _______,       _______,    _______,              _______, _______, _______
-                                    // └────────────┴────────────┴─────────┘            └────────┴────────┴────────┘
-  ),
-
-
-  [_NAV] = LAYOUT(
-  //┌─────────────┬─────────────┬────────┬────────┬────────┬─────────────┐                          ┌────────────┬─────────┬────────┬──────────┬───────────────┬────────┐
-     _______,       _______,      _______, _______, _______, _______,                                  _______,    _______, _______, _______,     _______,      _______,
-  //├─────────────┼─────────────┼────────┼────────┼────────┼─────────────┤                          ├────────────┼─────────┼────────┼──────────┼───────────────┼────────┤
-     _______,      _______,       _______,  KC_UP,  _______, _______,                                  _______,    _______, KC_PGUP,  _______,     _______,     _______,
-  //├─────────────┼─────────────┼────────┼────────┼────────┼─────────────┤                          ├────────────┼─────────┼────────┼──────────┼───────────────┼────────┤
-     _______,      LCTL(KC_LEFT),KC_LEFT, KC_DOWN, KC_RIGHT,LCTL(KC_RIGHT),                           _______,    KC_HOME,  KC_PGDN, KC_END,     _______,       _______,
-  //├─────────────┼─────────────┼────────┼────────┼────────┼─────────────┼────────┐        ┌────────┼────────────┼─────────┼────────┼──────────┼───────────────┼────────┤
-     _______,        _______,    _______, _______, _______, _______,      _______,          _______,  _______,    _______,  _______, _______,    _______,       _______,
-  //└─────────────┴─────────────┴────────┴┬───────┴───┬────┴───────┬─────┴────┬───┘        └───┬─────────────────┴─────────┴────────┴──────────┴───────────────┴────────┴
-                                             _______,   _______,    _______,                     _______,          _______,       _______
-                                      //  └───────────┴────────────┴──────────┘                 └─────────────┴──────────────┴────────────┘
-  ),
-
-  [_GAMING] = LAYOUT(
-    //┌────────┬────────┬────────┬────────┬────────┬────────┐                          ┌────────┬────────┬────────┬────────┬────────┬────────────┐
-       _______,  _______, _______, _______, _______, _______,                            _______, _______, _______, _______, _______,  _______,
-    //├────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────────┤
-       KC_LALT, _______, _______, _______, _______, _______,                            _______, _______, _______, _______, _______, _______,
-    //├────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────────┤
-       KC_LSFT, KC_A,    KC_S,    KC_D,    KC_F,    _______,                            _______,   KC_J,    KC_K,    KC_L,  KC_P,     _______,
-    //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐        ┌────────┼────────┼────────┼────────┼────────┼────────┼────────────┤
-       KC_LCTL, _______, _______, _______, _______, _______,LONG_TOGGLE_GAMING,LONG_TOGGLE_GAMING,_______, _______, _______, _______, _______, _______,
-    //└────────┴────────┴────────┴───┬────┴───┬────┴───┬────┴───┬────┘        └───┬────┴───┬────┴───┬────┴───┬────┴────────┴────────┴────────────┘
-                                      _______,  KC_SPC,  KC_ENT,                    _______, _______,  _______
-    //                               └────────┴────────┴────────┘                 └────────┴────────┴────────┘
-    ),
-};
-
-
-// ==========================================================================
-// 4. CORE LOGIC & CUSTOM BEHAVIOR
-// ==========================================================================
+#include "keycode_definitions.h"
+#include "layers.h"
+#include "state_config.h"
 
 /**
  * Custom Tapping Term: Adjusts how long you must hold a key for it to become a modifier.
  * Improves Home Row Mod accuracy by making index fingers faster and pinkies more deliberate.
  */
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
-  switch (keycode) {
-    case SFT_F:
-    case SFT_J:
-      return TAPPING_TERM - 30; // Faster response for index fingers
-    case GUI_SCLN:
-    case GUI_A:
-      return TAPPING_TERM + 70; // More delay for pinkies to prevent accidental triggers
-    default:
-      return TAPPING_TERM;
+    switch (keycode) {
+        case LSFT_T(KC_F):
+        case RSFT_T(KC_J):
+            return TAPPING_TERM - 30; // Faster response for index fingers
+        case MT(MOD_LGUI, KC_A):
+          return TAPPING_TERM + 70; // More delay for pinkies to prevent accidental triggers
+        case MT(MOD_RCTL, KC_K):
+        case MT(MOD_RGUI, KC_SCLN):
+        case RALT_T(KC_L):
+            return TAPPING_TERM * 2;  // I don't use right side mods that often
+        default:
+          return TAPPING_TERM;
   }
 }
 
@@ -213,7 +81,7 @@ void matrix_scan_user(void) {
 
 	if (toggle_key_pressed && !toggle_threshold_met) {
         if (timer_elapsed(toggle_hold_timer) > 1500) { // 1.5 second threshold
-            layer_invert(_GAMING);   // Turns _GAMING on if off, or off if on
+            layer_invert(_GAMING);   // Toggles the gaming layer
             toggle_threshold_met = true; // Lock the action so it doesn't toggle again
         }
     }
@@ -258,6 +126,25 @@ bool process_detected_host_os_user(os_variant_t detected_os) {
 }
 
 
+/*
+bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t* tap_hold_record,
+                      uint16_t other_keycode, keyrecord_t* other_record) {
+  // Exceptionally allow some one-handed chords for hotkeys.
+  switch (tap_hold_keycode) {
+    case LGUI_T(KC_A):
+    case LALT_T(KC_S):
+    case LCTL_T(KC_D):
+      return true;
+      break;
+    default:
+      return false;
+      break;
+  }
+  // Otherwise defer to the opposite hands rule.
+
+  //return get_chordal_hold_default(tap_hold_record, other_record);
+}
+
 bool get_permissive_hold(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case SFT_F:
@@ -285,7 +172,6 @@ bool get_retro_tapping(uint16_t keycode, keyrecord_t *record) {
 // Ensure your Quick Tap Term is 0 for these keys.
 // This ensures that "f -> hold f" results in a capital 'F'
 // rather than an auto-repeated 'fffff'.
-
 uint16_t get_quick_tap_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case SFT_F:
@@ -295,3 +181,4 @@ uint16_t get_quick_tap_term(uint16_t keycode, keyrecord_t *record) {
             return QUICK_TAP_TERM;
     }
 }
+*/
