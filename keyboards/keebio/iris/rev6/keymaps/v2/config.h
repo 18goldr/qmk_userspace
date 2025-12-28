@@ -36,3 +36,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Ensures that both halves of the split keyboard stay in sync regarding which
 // layer is currently active, so RGB indicators work correctly on both sides.
 #define SPLIT_LAYER_STATE_ENABLE
+
+// ARM-based Macs (M1/M2/M3) can sometimes trigger detection updates repeatedly.
+// To prevent keys from "flickering" or re-swapping, we add this.
+#define OS_DETECTION_SINGLE_REPORT
+#define OS_DETECTION_KEYBOARD_RESET
+#define OS_DETECTION_DEBOUNCE 500
+
+
+
+// See https://docs.qmk.fm/tap_hold for descriptions of these
+#define QUICK_TAP_TERM_PER_KEY
+#define PERMISSIVE_HOLD
+// If a key is held then released alone, it sends the tap value regardless of time.
+//#define RETRO_TAPPING
+#define RETRO_TAPPING_PER_KEY
+
+// Tap for the character, hold and release alone for the shifted version.
+#define RETRO_SHIFT
+// This ensures that holding the key past the TAPPING_TERM still results
+// in a shifted character on release.
+#define RETRO_SHIFT_HOLD_TYPE

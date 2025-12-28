@@ -1,4 +1,6 @@
 #include QMK_KEYBOARD_H
+#include "os_detection.h" // Needed for debug and stability
+#include <keymap_introspection.h>
 
 // ==========================================================================
 // 1. LAYER DEFINITIONS & SHORTCUTS
@@ -11,15 +13,15 @@
 
 // Home Row Mods: Hold for Modifier, Tap for Key (Left Hand)
 #define GUI_A   MT(MOD_LGUI, KC_A)
-#define ALT_S   MT(MOD_LALT, KC_S)
+#define ALT_S   LALT_T(KC_S)
 #define CTL_D   MT(MOD_LCTL, KC_D)
-#define SFT_F   MT(MOD_LSFT, KC_F)
+#define SFT_F   LSFT_T(KC_F)
 
 // Home Row Mods: Hold for Modifier, Tap for Key (Right Hand)
-#define SFT_J   MT(MOD_RGUI, KC_J)
-#define CTL_K   MT(MOD_RALT, KC_K)
-#define ALT_L   MT(MOD_RCTL, KC_L)
-#define GUI_SCLN MT(MOD_RSFT, KC_SCLN)
+#define SFT_J RSFT_T(KC_J)
+#define CTL_K MT(MOD_RCTL, KC_K)
+#define ALT_L RALT_T(KC_L)
+#define GUI_SCLN MT(MOD_RGUI, KC_SCLN)
 
 // Dual-function Thumb Keys: Hold for Layer, Tap for Key
 #define ENT_SYM LT(_SYM, KC_ENT)
@@ -55,7 +57,7 @@ int backlightLEDall[28] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
 // ==========================================================================
 // 3. KEYMAPS (Layers)
 // ==========================================================================
-
+const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [_QWERTY] = LAYOUT(
   //┌────────┬────────────────────┬───────────────────┬───────────────────┬───────────────────┬────────────┐                              ┌───────────┬───────────────────────┬───────────────────┬───────────────────┬───────────────────────┬────────┐
      KC_GRV,    KC_1,                     KC_2,                KC_3,            KC_4,              KC_5,                                          KC_6,            KC_7,               KC_8,                KC_9,               KC_0,             KC_ESC,
@@ -66,7 +68,7 @@ int backlightLEDall[28] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
   //├────────┼────────────────────┼───────────────────┼───────────────────┼───────────────────┼────────────┼─────────┐           ┌────────┴───────────┼───────────────────────┼───────────────────┼───────────────────┼───────────────────────┼────────┼
      KC_TAB,   KC_Z,                   KC_X,                 KC_C,                KC_V,          KC_B,      MO(_FN),              TG(_GAMING),  KC_N,          KC_M,               KC_COMM,              KC_DOT,              KC_SLSH,          KC_BSLS,
   //└────────┴────────────────────┴───────────────────┴───────────────────┬───────────────────┴────────────┴─────────┘           └────────┴───────────┴───────────────────────┴───────────────────┴───────────────────┴───────────────────────┴────────┘
-                                                                             PREVWIN,      ENT_SYM,         ENT_SYM,            SPC_NAV,     SPC_NAV,   NEXTWIN
+                                                                             PREVWIN,      MO(_SYM),         ENT_SYM,            SPC_NAV,     MO(_NAV),   NEXTWIN
                                                //                         └──────────────┴─────────────────┴─────────┘           └────────┴────────────┴──────────┘
   ),
 
@@ -198,22 +200,75 @@ void matrix_scan_user(void) {
  * RGB Indicators: Updates the LEDs based on keyboard state.
  */
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    // 1. Caps Lock Indicator (Keys 25 and 12 turn Red)
-    if (host_keyboard_led_state().caps_lock) {
-        rgb_matrix_set_color(25, RGB_RED);
-        rgb_matrix_set_color(12, RGB_RED);
-    }
+  // Caps Lock Indicator
+  if (host_keyboard_led_state().caps_lock) {
+    rgb_matrix_set_color(25, RGB_RED);
+    rgb_matrix_set_color(12, RGB_RED);
+  }
 
-    // 2. Global Layer Colors (Sets the theme for the entire board)
-    for (uint8_t i = led_min; i < led_max; i++) {
-        switch(get_highest_layer(layer_state|default_layer_state)) {
-            case _GAMING:
-                rgb_matrix_set_color(i, colourGaming[0], colourGaming[1], colourGaming[2]);
-                break;
-            default:
-                rgb_matrix_set_color(i, colourDefault[0], colourDefault[1], colourDefault[2]);
-                break;
-        }
+  for (uint8_t i = led_min; i < led_max; i++) {
+    // Layer Colors on Keys only
+    switch(get_highest_layer(layer_state|default_layer_state)) {
+      case _GAMING:
+        rgb_matrix_set_color(i, colourGaming[0], colourGaming[1], colourGaming[2]);
+        break;
+      default:
+        rgb_matrix_set_color(i, colourDefault[0], colourDefault[1], colourDefault[2]);
+        break;
     }
-    return false;
+  }
+  return false;
+}
+
+// Callback function that runs automatically when the OS is detected
+bool process_detected_host_os_user(os_variant_t detected_os) {
+    switch (detected_os) {
+        case OS_MACOS:
+        case OS_IOS:
+            keymap_config.swap_lctl_lgui = true;
+            break;
+        default:
+            keymap_config.swap_lctl_lgui = false;
+            break;
+    }
+    return true;
+}
+
+
+bool get_permissive_hold(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case SFT_F:
+        case SFT_J:
+            // This makes the "Shift" trigger immediately when you press
+            // the next key (the ?) while holding 'f'.
+            return true;
+        default:
+            return false;
+    }
+}
+
+// Define which keys should NOT use Retro Tapping.
+// By returning false, we allow Retro Shift to handle these keys instead.
+bool get_retro_tapping(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case SFT_F:
+        case SFT_J:
+            return false; // Disable Retro Tap so Retro Shift can work
+        default:
+            return true;  // Keep Retro Tap for A, S, D, K, L, ; as a safety net
+    }
+}
+
+// Ensure your Quick Tap Term is 0 for these keys.
+// This ensures that "f -> hold f" results in a capital 'F'
+// rather than an auto-repeated 'fffff'.
+
+uint16_t get_quick_tap_term(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case SFT_F:
+        case SFT_J:
+            return 0;
+        default:
+            return QUICK_TAP_TERM;
+    }
 }

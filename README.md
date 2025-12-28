@@ -55,8 +55,8 @@ If you wish to manually manage `qmk_firmware` using git within the userspace rep
 This can also be used to control which fork is used, though only upstream `qmk_firmware` will have support for external userspace until other manufacturers update their forks.
 
 1. (First time only) `git submodule add https://github.com/qmk/qmk_firmware.git`
-1. (To update) `git submodule update --init --recursive`
-1. Commit your changes to your userspace repository
+2. (To update) `git submodule update --init --recursive`
+3. Commit your changes to your userspace repository
 
 
 # My Setup
@@ -83,3 +83,5 @@ The overlay_dir can be in the Windows drive. The QMK home should be in the WSL2 
 ## Compile through QMK
 I then ran the following command to generate the hex locally: ` qmk compile -kb keebio/iris/rev6 -km v2`.
 
+## Flash through QMK-Toolbox
+To flash, hold down the button on the back of the Iris board. This puts it into DFU mode.

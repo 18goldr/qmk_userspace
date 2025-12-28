@@ -39,3 +39,6 @@ RGB_MATRIX_ENABLE = yes
 # Enables Link Time Optimization. This significantly reduces the size of your
 # compiled firmware so it fits on the chip's limited memory.
 LTO_ENABLE = yes
+
+# Enables ability to detect OS on the fly (ie. mac vs windows)
+OS_DETECTION_ENABLE = yes
