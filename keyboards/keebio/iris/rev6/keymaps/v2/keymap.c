@@ -15,6 +15,8 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
         case LSFT_T(KC_F):
         case RSFT_T(KC_J):
             return TAPPING_TERM - 30; // Faster response for index fingers
+        case LCTL_T(KC_D):
+            return TAPPING_TERM - 15;
         case MT(MOD_LGUI, KC_A):
           return TAPPING_TERM + 70; // More delay for pinkies to prevent accidental triggers
         case MT(MOD_RCTL, KC_K):
@@ -126,59 +128,14 @@ bool process_detected_host_os_user(os_variant_t detected_os) {
 }
 
 
-/*
-bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t* tap_hold_record,
-                      uint16_t other_keycode, keyrecord_t* other_record) {
-  // Exceptionally allow some one-handed chords for hotkeys.
-  switch (tap_hold_keycode) {
-    case LGUI_T(KC_A):
-    case LALT_T(KC_S):
-    case LCTL_T(KC_D):
-      return true;
-      break;
-    default:
-      return false;
-      break;
-  }
-  // Otherwise defer to the opposite hands rule.
-
-  //return get_chordal_hold_default(tap_hold_record, other_record);
-}
-
-bool get_permissive_hold(uint16_t keycode, keyrecord_t *record) {
+bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case SFT_F:
         case SFT_J:
-            // This makes the "Shift" trigger immediately when you press
-            // the next key (the ?) while holding 'f'.
+            // Immediately select the hold action when another key is pressed.
             return true;
         default:
+            // Do not select the hold action when another key is pressed.
             return false;
     }
 }
-
-// Define which keys should NOT use Retro Tapping.
-// By returning false, we allow Retro Shift to handle these keys instead.
-bool get_retro_tapping(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case SFT_F:
-        case SFT_J:
-            return false; // Disable Retro Tap so Retro Shift can work
-        default:
-            return true;  // Keep Retro Tap for A, S, D, K, L, ; as a safety net
-    }
-}
-
-// Ensure your Quick Tap Term is 0 for these keys.
-// This ensures that "f -> hold f" results in a capital 'F'
-// rather than an auto-repeated 'fffff'.
-uint16_t get_quick_tap_term(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case SFT_F:
-        case SFT_J:
-            return 0;
-        default:
-            return QUICK_TAP_TERM;
-    }
-}
-*/

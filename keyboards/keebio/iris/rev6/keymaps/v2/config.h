@@ -44,19 +44,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define OS_DETECTION_DEBOUNCE 500
 
 
-//#define CHORDAL_HOLD
-
-/*
-// See https://docs.qmk.fm/tap_hold for descriptions of these
-#define QUICK_TAP_TERM_PER_KEY
-#define PERMISSIVE_HOLD
-// If a key is held then released alone, it sends the tap value regardless of time.
-//#define RETRO_TAPPING
-#define RETRO_TAPPING_PER_KEY
-
-// Tap for the character, hold and release alone for the shifted version.
-#define RETRO_SHIFT
-// This ensures that holding the key past the TAPPING_TERM still results
-// in a shifted character on release.
-#define RETRO_SHIFT_HOLD_TYPE
-*/
+#define HOLD_ON_OTHER_KEY_PRESS_PER_KEY

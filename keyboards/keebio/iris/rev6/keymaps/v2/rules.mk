@@ -42,3 +42,5 @@ LTO_ENABLE = yes
 
 # Enables ability to detect OS on the fly (ie. mac vs windows)
 OS_DETECTION_ENABLE = yes
+
+AUTO_SHIFT_ENABLE = yes
