@@ -10,7 +10,7 @@ MOUSEKEY_ENABLE = no
 EXTRAKEY_ENABLE = no
 
 # Enables the ability to send debug messages to the QMK Toolbox console.
-CONSOLE_ENABLE = yes
+CONSOLE_ENABLE = no
 
 # Disables the 'Command' feature, which is an older way to check keyboard status.
 COMMAND_ENABLE = no
@@ -42,5 +42,3 @@ LTO_ENABLE = yes
 
 # Enables ability to detect OS on the fly (ie. mac vs windows)
 OS_DETECTION_ENABLE = yes
-
-AUTO_SHIFT_ENABLE = yes

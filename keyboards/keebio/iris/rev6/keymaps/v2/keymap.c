@@ -35,7 +35,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
     // Persistent Layer Changes
     case QWERTY:
-      if (record->event.pressed) { set_single_persistent_default_layer(_QWERTY); }
+      if (record->event.pressed) {
+          set_single_persistent_default_layer(_QWERTY);
+      }
       return false;
 
     // Alt-Tab Macros (Forward and Backward)
@@ -58,7 +60,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       }
       break;
 
-	case LONG_TOGGLE_GAMING:
+	case TOGG_GAME:
 		if (record->event.pressed) {
         	toggle_key_pressed = true;
         	toggle_threshold_met = false; // Reset lock for a new press
@@ -127,11 +129,10 @@ bool process_detected_host_os_user(os_variant_t detected_os) {
     return true;
 }
 
-
 bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
-        case SFT_F:
-        case SFT_J:
+        case LSFT_T(KC_F):
+        case RSFT_T(KC_J):
             // Immediately select the hold action when another key is pressed.
             return true;
         default:
@@ -139,3 +140,95 @@ bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
             return false;
     }
 }
+
+uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t* record,
+                           uint16_t prev_keycode) {
+	// INDEX SHIFT PROTECTION (F and J)
+	if (prev_keycode == LSFT_T(KC_F) || prev_keycode == RSFT_T(KC_J)) {
+		switch (keycode) {
+			case KC_SLSH:
+			case KC_SCLN:
+			case LT(_SYM, KC_ENT):
+			case KC_QUOT:
+				return 0;  // I rarely want to type f/ or f;, f'. I also rarely do f then click enter.
+				break;
+			default:
+				// Pattern: fa, fl, fj, fr, just, join
+				return FLOW_TAP_TERM;
+				break;
+		}
+	// THUMB LAYER PROTECTION (Space)
+	} else if (prev_keycode == LT(_NAV, KC_SPC)) {
+		switch (keycode) {
+			case KC_E:
+			case KC_D:
+			case KC_F:
+			case KC_S:
+				return FLOW_TAP_TERM / 2;  // I could actually want a letter after a space.
+				break;
+			default:
+				return FLOW_TAP_TERM;
+				break;
+		}
+	}
+	// CONTROL PROTECTION (D)
+	else if (prev_keycode == LCTL_T(KC_D)) {
+		switch (keycode) {
+			case KC_Z:
+			case KC_S:
+			case KC_X:
+			case KC_C:
+			case KC_V:
+				return 0; // dz, dx, dc, dv, ds are things I rarely type (unless I'm doing calculus).
+				break;
+			case KC_R:
+				return FLOW_TAP_TERM / 2; // Protects words like drill, dry, etc. But still allows for control + r in the temrminal
+				break;
+			default:
+				// If it's not a shortcut or 'r', we're likely mashing or typing a rare combo.
+                // We'll give it a standard term to be safe.
+				// Pattern matched: da
+				return FLOW_TAP_TERM;
+				break;
+		}
+	}
+	// WEAK FINGER PROTECTION (A, S, P, L)
+    // We only apply FLOW_TAP_TERM to specific valid english patterns
+    switch (prev_keycode) {
+        case LGUI_T(KC_A):
+            switch (keycode) {
+                case KC_L:
+				case KC_S:
+				case KC_D:
+				case KC_F:
+				case KC_G:
+				case KC_P:
+                    return FLOW_TAP_TERM; // al, as, ad, af, ag, ap
+					break;
+            }
+            break;
+
+        case LALT_T(KC_S): // Your 'S' key
+            switch (keycode) {
+                case KC_A:
+				case KC_H:
+				case KC_K:
+				case KC_L:
+                    return FLOW_TAP_TERM; // sa, sh, sk, sl
+					break;
+            }
+            break;
+
+        case RGUI_T(KC_P): // Your ';' or 'P' key
+        case RALT_T(KC_L): // Your 'L' key
+            if (keycode == KC_A)
+			{
+				return FLOW_TAP_TERM; // pa, la
+
+			}
+			break;
+    }
+
+    return 0;  // Disable Flow Tap.
+}
+

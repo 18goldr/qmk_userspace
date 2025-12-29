@@ -87,6 +87,13 @@ I then ran the following command to generate the hex locally: ` qmk compile -kb 
 To flash, hold down the button on the back of the Iris board. This puts it into DFU mode.
 
 
+# Test sentences/words for fast typing
+I want to...
+Angry
+asdfasd
+jklpjkplj
+ja
+
 # TODO
 - Pressing a bunch of home row mods at once triggers a bunch of programs... wonder if it's possible to work around this
 - Add a mouse layer for when i want to work one handed
