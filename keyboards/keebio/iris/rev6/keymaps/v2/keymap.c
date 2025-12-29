@@ -6,10 +6,9 @@
 #include "layers.h"
 #include "state_config.h"
 
-/**
- * Custom Tapping Term: Adjusts how long you must hold a key for it to become a modifier.
- * Improves Home Row Mod accuracy by making index fingers faster and pinkies more deliberate.
- */
+
+// Custom Tapping Term: Adjusts how long you must hold a key for it to become a modifier.
+// Improves Home Row Mod accuracy by making index fingers faster and pinkies more deliberate.
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case LSFT_T(KC_F):
@@ -28,9 +27,7 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
   }
 }
 
-/**
- * Custom Keycode Handler: Manages Layer switching and the persistent Alt-Tab macro.
- */
+// Custom Keycode Handler: Manages Layer switching and the persistent Alt-Tab macro.
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
     // Persistent Layer Changes
@@ -73,10 +70,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   return true;
 }
 
-/**
- * Matrix Scan: Runs constantly. Used here to release the 'Alt' key
- * if you haven't pressed the Alt-Tab keys for 600ms.
- */
+// Matrix Scan: Runs constantly. Used here to release the 'Alt' key
+// if you haven't pressed the Alt-Tab keys for 600ms.
 void matrix_scan_user(void) {
   	if (is_alt_tab_active && timer_elapsed(alt_tab_timer) > 600) {
     	unregister_code(KC_LALT);
@@ -91,9 +86,8 @@ void matrix_scan_user(void) {
     }
 }
 
-/**
- * RGB Indicators: Updates the LEDs based on keyboard state.
- */
+
+// RGB Indicators: Updates the LEDs based on keyboard state.
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
   // Caps Lock Indicator
   if (host_keyboard_led_state().caps_lock) {
@@ -129,12 +123,14 @@ bool process_detected_host_os_user(os_variant_t detected_os) {
     return true;
 }
 
+
 bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case LSFT_T(KC_F):
-        case RSFT_T(KC_J):
             // Immediately select the hold action when another key is pressed.
             return true;
+		case RSFT_T(KC_J):
+			return true;
         default:
             // Do not select the hold action when another key is pressed.
             return false;
@@ -143,23 +139,30 @@ bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
 
 uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t* record,
                            uint16_t prev_keycode) {
+	uint16_t tap_code = get_tap_keycode(keycode);
+	uint16_t prev_tap_code = get_tap_keycode(prev_keycode);
 	// INDEX SHIFT PROTECTION (F and J)
-	if (prev_keycode == LSFT_T(KC_F) || prev_keycode == RSFT_T(KC_J)) {
-		switch (keycode) {
+	if (prev_tap_code == KC_F) {
+		switch (tap_code) {
 			case KC_SLSH:
 			case KC_SCLN:
-			case LT(_SYM, KC_ENT):
+			case KC_ENT:
 			case KC_QUOT:
-				return 0;  // I rarely want to type f/ or f;, f'. I also rarely do f then click enter.
+			case KC_I:
+				return 0;  // I rarely want to type f/ or f;, f'. I also rarely do f then click enter. I also want to prioritize "I" over "fi"
 				break;
 			default:
 				// Pattern: fa, fl, fj, fr, just, join
 				return FLOW_TAP_TERM;
 				break;
 		}
+	// I dont really use right shift when typing fast.
+	} else if (prev_tap_code == KC_J) {
+		return FLOW_TAP_TERM;
+
 	// THUMB LAYER PROTECTION (Space)
-	} else if (prev_keycode == LT(_NAV, KC_SPC)) {
-		switch (keycode) {
+	} else if (prev_tap_code == KC_SPC) {
+		switch (tap_code) {
 			case KC_E:
 			case KC_D:
 			case KC_F:
@@ -172,8 +175,8 @@ uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t* record,
 		}
 	}
 	// CONTROL PROTECTION (D)
-	else if (prev_keycode == LCTL_T(KC_D)) {
-		switch (keycode) {
+	else if (prev_tap_code == KC_D) {
+		switch (tap_code) {
 			case KC_Z:
 			case KC_S:
 			case KC_X:
@@ -194,9 +197,9 @@ uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t* record,
 	}
 	// WEAK FINGER PROTECTION (A, S, P, L)
     // We only apply FLOW_TAP_TERM to specific valid english patterns
-    switch (prev_keycode) {
-        case LGUI_T(KC_A):
-            switch (keycode) {
+    switch (prev_tap_code) {
+        case KC_A:
+            switch (tap_code) {
                 case KC_L:
 				case KC_S:
 				case KC_D:
@@ -208,8 +211,8 @@ uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t* record,
             }
             break;
 
-        case LALT_T(KC_S): // Your 'S' key
-            switch (keycode) {
+        case KC_S:
+            switch (tap_code) {
                 case KC_A:
 				case KC_H:
 				case KC_K:
@@ -219,12 +222,11 @@ uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t* record,
             }
             break;
 
-        case RGUI_T(KC_P): // Your ';' or 'P' key
-        case RALT_T(KC_L): // Your 'L' key
-            if (keycode == KC_A)
+        case KC_P:
+        case KC_L:
+            if (tap_code == KC_A)
 			{
 				return FLOW_TAP_TERM; // pa, la
-
 			}
 			break;
     }
@@ -232,3 +234,23 @@ uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t* record,
     return 0;  // Disable Flow Tap.
 }
 
+
+bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t* tap_hold_record,
+                      uint16_t other_keycode, keyrecord_t* other_record) {
+
+    // We use your existing logic to see if this is a "flow" (typing) or "shortcut"
+    // Note: get_flow_tap_term takes the raw keycodes, which is perfect here.
+    uint16_t flow_term = get_flow_tap_term(other_keycode, other_record, tap_hold_keycode);
+
+    // If Flow Tap returns 0, it means:
+    // 1. It's an index shift exception (like KC_I)
+    // 2. It's a Ctrl shortcut (like KC_Z, KC_X, KC_C)
+    // 3. It's a "nonsense" mash that isn't a valid English roll.
+    if (flow_term == 0) {
+        return true; // Allow the HOLD (Modifier) to trigger instantly
+    }
+
+    // For everything else, defer to the default "Opposite Hands" rule.
+    // This will force "face" (same hand) to be a tap, and "I" (opposite hand) to be a hold.
+    return get_chordal_hold_default(tap_hold_record, other_record);
+}

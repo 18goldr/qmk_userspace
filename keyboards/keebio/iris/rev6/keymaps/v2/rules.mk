@@ -41,4 +41,4 @@ RGB_MATRIX_ENABLE = yes
 LTO_ENABLE = yes
 
 # Enables ability to detect OS on the fly (ie. mac vs windows)
-OS_DETECTION_ENABLE = yes
+OS_DETECTION_ENABLE = no
