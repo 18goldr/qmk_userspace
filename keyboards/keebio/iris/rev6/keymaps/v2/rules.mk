@@ -10,10 +10,10 @@ MOUSEKEY_ENABLE = no
 EXTRAKEY_ENABLE = no
 
 # Enables the ability to send debug messages to the QMK Toolbox console.
-CONSOLE_ENABLE = no
+CONSOLE_ENABLE = yes
 
 # Disables the 'Command' feature, which is an older way to check keyboard status.
-COMMAND_ENABLE = no
+COMMAND_ENABLE = yes
 
 # Disables N-Key Rollover (the ability to press every key at once). Standard 6-key is default.
 NKRO_ENABLE = no
@@ -34,7 +34,7 @@ ENCODER_ENABLE = no
 TAP_DANCE_ENABLE = no
 
 # Enables the advanced per-key RGB system used by the Iris Rev 6.
-RGB_MATRIX_ENABLE = yes
+RGB_MATRIX_ENABLE = no
 
 # Enables Link Time Optimization. This significantly reduces the size of your
 # compiled firmware so it fits on the chip's limited memory.

@@ -2,7 +2,6 @@
 #include "os_detection.h" // Needed for debug and stability
 #include <keymap_introspection.h>
 
-#include "keycode_definitions.h"
 #include "layers.h"
 #include "state_config.h"
 
@@ -29,6 +28,7 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
 
 // Custom Keycode Handler: Manages Layer switching and the persistent Alt-Tab macro.
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+	uprintf("ID: %d | P: %u | T: %u\n", keycode, record->event.pressed, record->event.time);
   switch (keycode) {
     // Persistent Layer Changes
     case QWERTY:
@@ -86,7 +86,7 @@ void matrix_scan_user(void) {
     }
 }
 
-
+/*
 // RGB Indicators: Updates the LEDs based on keyboard state.
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
   // Caps Lock Indicator
@@ -122,135 +122,169 @@ bool process_detected_host_os_user(os_variant_t detected_os) {
     }
     return true;
 }
+*/
 
 
 bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case LSFT_T(KC_F):
-            // Immediately select the hold action when another key is pressed.
-            return true;
-		case RSFT_T(KC_J):
-			return true;
+    uint16_t tap_code = get_tap_keycode(keycode);
+    switch (tap_code) {
+        // IMPORTANT:
+        // Do NOT include KC_F here. You want Shift-hold only for specific chords (I / ; / ' / / / Enter),
+        // and HOO cannot be conditional on which other key was pressed.
+        case KC_J:
+            return true;   // keep if you like it for right shift; remove if it causes similar issues
         default:
-            // Do not select the hold action when another key is pressed.
             return false;
     }
 }
 
+
 uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t* record,
                            uint16_t prev_keycode) {
-	uint16_t tap_code = get_tap_keycode(keycode);
-	uint16_t prev_tap_code = get_tap_keycode(prev_keycode);
-	// INDEX SHIFT PROTECTION (F and J)
-	if (prev_tap_code == KC_F) {
-		switch (tap_code) {
-			case KC_SLSH:
-			case KC_SCLN:
-			case KC_ENT:
-			case KC_QUOT:
-			case KC_I:
-				return 0;  // I rarely want to type f/ or f;, f'. I also rarely do f then click enter. I also want to prioritize "I" over "fi"
-				break;
-			default:
-				// Pattern: fa, fl, fj, fr, just, join
-				return FLOW_TAP_TERM;
-				break;
-		}
-	// I dont really use right shift when typing fast.
-	} else if (prev_tap_code == KC_J) {
-		return FLOW_TAP_TERM;
+    uint16_t tap_code      = get_tap_keycode(keycode);
+    uint16_t prev_tap_code = get_tap_keycode(prev_keycode);
 
-	// THUMB LAYER PROTECTION (Space)
-	} else if (prev_tap_code == KC_SPC) {
-		switch (tap_code) {
-			case KC_E:
-			case KC_D:
-			case KC_F:
-			case KC_S:
-				return FLOW_TAP_TERM / 2;  // I could actually want a letter after a space.
-				break;
-			default:
-				return FLOW_TAP_TERM;
-				break;
-		}
-	}
-	// CONTROL PROTECTION (D)
-	else if (prev_tap_code == KC_D) {
-		switch (tap_code) {
-			case KC_Z:
-			case KC_S:
-			case KC_X:
-			case KC_C:
-			case KC_V:
-				return 0; // dz, dx, dc, dv, ds are things I rarely type (unless I'm doing calculus).
-				break;
-			case KC_R:
-				return FLOW_TAP_TERM / 2; // Protects words like drill, dry, etc. But still allows for control + r in the temrminal
-				break;
-			default:
-				// If it's not a shortcut or 'r', we're likely mashing or typing a rare combo.
-                // We'll give it a standard term to be safe.
-				// Pattern matched: da
-				return FLOW_TAP_TERM;
-				break;
-		}
-	}
-	// WEAK FINGER PROTECTION (A, S, P, L)
-    // We only apply FLOW_TAP_TERM to specific valid english patterns
+    // INDEX SHIFT PROTECTION (F and J)
+    if (prev_tap_code == KC_F) {
+        switch (tap_code) {
+            case KC_SCLN:
+            case KC_QUOT:
+            case KC_I:
+            case KC_SLSH:  // add back: for '?' (Shift + /)
+            case KC_ENT:   // add back: for Shift+Enter (esp. with LT(_SYM, KC_ENT))
+                return 0;  // prioritize HOLD (Shift) for these chords
+            default:
+                return FLOW_TAP_TERM; // allow normal "flow" typing like fl/fr/fa...
+        }
+    } else if (prev_tap_code == KC_J) {
+        return FLOW_TAP_TERM;
+
+    // THUMB LAYER PROTECTION (Space)
+    } else if (prev_tap_code == KC_SPC) {
+
+        // IMPORTANT:
+        // Don't apply the "space -> short flow term" behavior to your LSFT_T(KC_F),
+        // otherwise Space->F->I can commit 'f' before Shift engages.
+        if (keycode == LSFT_T(KC_F)) {
+            return 0;
+        }
+
+        switch (tap_code) {
+            case KC_E:
+            case KC_D:
+            case KC_F:
+            case KC_S:
+                return FLOW_TAP_TERM / 2;
+            default:
+                return FLOW_TAP_TERM;
+        }
+    }
+
+    // CONTROL PROTECTION (D)
+    else if (prev_tap_code == KC_D) {
+        switch (tap_code) {
+            case KC_Z:
+            case KC_S:
+            case KC_X:
+            case KC_C:
+            case KC_V:
+                return 0; // prefer Ctrl shortcuts
+            case KC_R:
+                return FLOW_TAP_TERM / 2; // allow Ctrl+R but keep drill/dry protection
+            default:
+                return FLOW_TAP_TERM;
+        }
+    }
+
+    // WEAK FINGER PROTECTION (A, S, P, L)
     switch (prev_tap_code) {
         case KC_A:
             switch (tap_code) {
                 case KC_L:
-				case KC_S:
-				case KC_D:
-				case KC_F:
-				case KC_G:
-				case KC_P:
-                    return FLOW_TAP_TERM; // al, as, ad, af, ag, ap
-					break;
+                case KC_S:
+                case KC_D:
+                case KC_F:
+                case KC_G:
+                case KC_P:
+                    return FLOW_TAP_TERM;
             }
             break;
 
         case KC_S:
             switch (tap_code) {
                 case KC_A:
-				case KC_H:
-				case KC_K:
-				case KC_L:
-                    return FLOW_TAP_TERM; // sa, sh, sk, sl
-					break;
+                case KC_H:
+                case KC_K:
+                case KC_L:
+                    return FLOW_TAP_TERM;
             }
             break;
 
         case KC_P:
         case KC_L:
-            if (tap_code == KC_A)
-			{
-				return FLOW_TAP_TERM; // pa, la
-			}
-			break;
+            if (tap_code == KC_A) {
+                return FLOW_TAP_TERM;
+            }
+            break;
     }
 
-    return 0;  // Disable Flow Tap.
+    return 0;
 }
 
 
 bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t* tap_hold_record,
                       uint16_t other_keycode, keyrecord_t* other_record) {
+    uint16_t other_tap = get_tap_keycode(other_keycode);
 
-    // We use your existing logic to see if this is a "flow" (typing) or "shortcut"
-    // Note: get_flow_tap_term takes the raw keycodes, which is perfect here.
-    uint16_t flow_term = get_flow_tap_term(other_keycode, other_record, tap_hold_keycode);
-
-    // If Flow Tap returns 0, it means:
-    // 1. It's an index shift exception (like KC_I)
-    // 2. It's a Ctrl shortcut (like KC_Z, KC_X, KC_C)
-    // 3. It's a "nonsense" mash that isn't a valid English roll.
-    if (flow_term == 0) {
-        return true; // Allow the HOLD (Modifier) to trigger instantly
+    // 1) Left Shift home-row mod: HOLD only for specific "I / : / \" / ? / Shift+Enter" intents
+    //    This prevents "flow" -> "Low" while still making your most common Shift chords instant.
+    if (tap_hold_keycode == LSFT_T(KC_F)) {
+        switch (other_tap) {
+            case KC_I:
+            case KC_SCLN: // ':' when shifted
+            case KC_QUOT: // '"' when shifted
+            case KC_SLSH: // '?' when shifted
+            case KC_ENT:  // Shift+Enter (including LT(_SYM, KC_ENT) because tap keycode is KC_ENT)
+                return true;   // force HOLD -> Shift
+            default:
+                return false;  // otherwise force TAP -> keep 'f' for normal words like "flow"
+        }
     }
 
-    // For everything else, defer to the default "Opposite Hands" rule.
-    // This will force "face" (same hand) to be a tap, and "I" (opposite hand) to be a hold.
+    // 2) Ctrl shortcuts: make LCTL_T(KC_D) HOLD immediately for common Ctrl combos
+    if (tap_hold_keycode == LCTL_T(KC_D)) {
+        switch (other_tap) {
+            case KC_Z:
+            case KC_S:
+            case KC_X:
+            case KC_C:
+            case KC_V:
+            case KC_R:
+                return true;   // force HOLD -> Ctrl
+            default:
+                break;         // otherwise fall through to your flow logic
+        }
+    }
+
+    // 3) NAV layer: make LT(_NAV, KC_SPC) HOLD immediately for NAV cluster keys
+    if (tap_hold_keycode == LT(_NAV, KC_SPC)) {
+        switch (other_tap) {
+            case KC_S:
+            case KC_D:
+            case KC_F:
+            case KC_E:
+                return true;   // force HOLD -> NAV layer
+            default:
+                break;
+        }
+    }
+
+    // Existing logic for everything else (your flow-based decision making)
+    uint16_t flow_term = get_flow_tap_term(other_keycode, other_record, tap_hold_keycode);
+
+    if (flow_term == 0) {
+        return true; // allow HOLD (modifier/layer) to trigger instantly
+    }
+
     return get_chordal_hold_default(tap_hold_record, other_record);
 }

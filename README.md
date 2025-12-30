@@ -107,9 +107,12 @@ jjI (vs jjfi)
 
 face (vs Ace)
 
+cd Code
+
 # TODO
-- Pressing a bunch of home row mods at once triggers a bunch of programs... wonder if it's possible to work around this
 - Add a mouse layer for when i want to work one handed
 - Set second thumb key to control and first thumb key to meta for emacs.
-  - Is it possible to do this if a specific program is open?
-- I still get fi instead of I a lot when typing fast.
+- I still get fi instead of I a lot when typing fast
+- shift tab results in "f "
+
+I want to
