@@ -6,8 +6,3 @@ uint16_t alt_tab_timer = 0;     // Timer to auto-release Alt after a timeout
 uint8_t colourDefault[] = {57, 184, 255}; // Light Blue
 uint8_t colourGaming[]  = {255, 0, 0};    // Red
 
-// State tracker for selection region feature
-static bool selecting = false;
-static bool ctrl_space_armed = false;
-
-static os_variant_t host_os = OS_UNSURE;

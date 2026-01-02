@@ -15,7 +15,8 @@ The difference is that in their example, the tap (quick press) toggles the layer
 # TODO
 - Add a mouse layer for when i want to work one handed
 - Set second thumb key to control and first thumb key to meta for emacs.
-- Add layer lock for nav
 - Disable caps word if use the mouse
 - I think the tap term for nav and sym are too short
 - Test features on mac
+- Stop just including c code in headers...
+- Select region should reanchor when you click control space when its already active, like in emacs

@@ -5,26 +5,7 @@
 #include "layers.h"
 #include "state_config.h"
 #include "select_region.h"
-
-static void kill_line(void) {
-    // If your selection mode is on, turn it off so Shift doesn't affect things
-    if (selecting) {
-        selection_set(false);
-    }
-
-    // Select to end-of-line (OS-specific)
-    if (host_os == OS_MACOS || host_os == OS_IOS) {
-        // Cmd+Shift+Right selects to end of line on macOS in most apps
-        // Since we swap control and gui automatically, then we send a keypress for gui instead of command here
-        tap_code16(S(G(KC_RGHT)));
-    } else {
-        // Shift+End selects to end of line on Windows/Linux in most apps
-        tap_code16(S(KC_END));
-    }
-
-    // Delete selection (if already at EOL, this typically deletes the newline/next char)
-    tap_code(KC_DEL);
-}
+#include "kill_line.h"
 
 // Custom Tapping Term: Adjusts how long you must hold a key for it to become a modifier.
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
@@ -42,7 +23,8 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
   }
 }
 
-// Custom Keycode Handler: Manages Layer switching and the persistent Alt-Tab macro.
+
+// Custom Keycode Handler: Manages Layer switching, persistent Alt-Tab macro, kill region and select region.
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // Ctrl+K => kill line (works with MT mods and doesn't "lose" Ctrl afterward)
     if (record->event.pressed && ctrl_is_down()) {
@@ -70,6 +52,65 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         }
     }
 
+    // select region feature
+    if (keycode == LT(_NAV, KC_SPC)) {
+        if (record->event.pressed) {
+            ctrl_space_armed = ctrl_is_down();
+            return true; // let LT logic proceed (tap vs hold decided later)
+        } else {
+            if (ctrl_space_armed && record->tap.count > 0) {
+                // Prevent OS/app from seeing Ctrl+Space
+                del_mods(MOD_MASK_CTRL);
+                del_oneshot_mods(MOD_MASK_CTRL);
+
+                selection_set(!selecting);
+
+                ctrl_space_armed = false;
+                return false; // swallow the tap so Space doesn't emit
+            }
+            ctrl_space_armed = false;
+            return true;
+        }
+    }
+
+    // Always let ESC cancel selection mode (even if ESC is on a layer/mod-tap elsewhere)
+    if (record->event.pressed) {
+        uint16_t tap_kc = get_tap_keycode(keycode);
+        if (tap_kc == KC_ESC && selecting) {
+            selection_set(false);
+            // return true; // allow ESC to still be sent
+        }
+    }
+
+    // ---- Emacs-y: if selection mode is on, typing cancels it ----
+    if (selecting) {
+        uint16_t tap_kc = get_tap_keycode(keycode);
+
+        // Never cancel selection for navigation keys or pure modifiers
+        if (!is_selection_nav(tap_kc) && !IS_MODIFIER_KEYCODE(keycode)) {
+
+            // IMPORTANT FIX:
+            // For Mod-Tap / Layer-Tap typing keys, cancel on PRESS so Shift is released
+            // BEFORE QMK decides/sends the tap character.
+            if (
+                record->event.pressed &&
+                (IS_QK_MOD_TAP(keycode) || IS_QK_LAYER_TAP(keycode)) &&
+                is_typing_key(tap_kc)
+            ) {
+                selection_set(false);
+            }
+
+            // Regular keys: cancel on press if it's a typing key
+            if (
+                record->event.pressed &&
+                !(IS_QK_MOD_TAP(keycode) || IS_QK_LAYER_TAP(keycode)) &&
+                is_typing_key(keycode)
+            ) {
+                selection_set(false);
+            }
+        }
+    }
+
     switch (keycode) {
         // Persistent Layer Changes
         case QWERTY:
@@ -77,25 +118,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 set_single_persistent_default_layer(_QWERTY);
             }
             return false;
-
-        case LT(_NAV, KC_SPC): // selection mode
-            if (record->event.pressed) {
-                ctrl_space_armed = ctrl_is_down();
-                return true; // let LT logic proceed (tap vs hold decided later)
-            } else {
-                if (ctrl_space_armed && record->tap.count > 0) {
-                    // Prevent OS/app from seeing Ctrl+Space
-                    del_mods(MOD_MASK_CTRL);
-                    del_oneshot_mods(MOD_MASK_CTRL);
-
-                    selection_set(!selecting);
-
-                    ctrl_space_armed = false;
-                    return false; // swallow the tap so Space doesn't emit
-                }
-                ctrl_space_armed = false;
-                return true;
-            }
 
         // Alt-Tab Macros (Forward and Backward)
         case NEXTWIN:
@@ -128,36 +150,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             break;
     }
-
-    // ---- Emacs-y: if selection mode is on, typing cancels it ----
-    if (selecting) {
-        uint16_t tap_kc = get_tap_keycode(keycode);
-
-        // Never cancel selection for navigation keys or pure modifiers
-        if (!is_selection_nav(tap_kc) && !IS_MODIFIER_KEYCODE(keycode)) {
-
-            // IMPORTANT FIX:
-            // For Mod-Tap / Layer-Tap typing keys, cancel on PRESS so Shift is released
-            // BEFORE QMK decides/sends the tap character.
-            if (
-                record->event.pressed &&
-                (IS_QK_MOD_TAP(keycode) || IS_QK_LAYER_TAP(keycode)) &&
-                is_typing_key(tap_kc)
-            ) {
-                selection_set(false);
-            }
-
-            // Regular keys: cancel on press if it's a typing key
-            if (
-                record->event.pressed &&
-                !(IS_QK_MOD_TAP(keycode) || IS_QK_LAYER_TAP(keycode)) &&
-                is_typing_key(keycode)
-            ) {
-                selection_set(false);
-            }
-        }
-    }
-  return true;
+    return true;
 }
 
 // Matrix Scan: Runs constantly. Used here to release the 'Alt' key

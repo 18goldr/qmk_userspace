@@ -1,5 +1,11 @@
 #pragma once
 
+// State trackers for selection region feature
+static bool selecting = false;
+static bool ctrl_space_armed = false;
+//static uint16_t sel_last_nav = KC_RGHT; // default direction
+
+
 
 static inline bool ctrl_is_down(void) {
     uint8_t mods = get_mods() | get_oneshot_mods() | get_weak_mods();
@@ -30,7 +36,7 @@ static bool is_typing_key(uint16_t kc) {
         case KC_BSPC:
         case KC_DEL:
 
-            // common punctuation/symbol keys
+        // common punctuation/symbol keys
         case KC_MINS:
         case KC_EQL:
         case KC_LBRC:

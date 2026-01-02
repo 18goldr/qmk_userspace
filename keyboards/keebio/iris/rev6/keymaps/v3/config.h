@@ -5,8 +5,7 @@
 #define TAPPING_TERM_PER_KEY
 
 // The default time (in milliseconds) a key must be held to register as a modifier.
-// At 180ms, this is a relatively "fast" setting, good for quick typists.
-#define TAPPING_TERM 180
+#define TAPPING_TERM 160
 
 // Tells QMK to look at the EEPROM (on-board memory) to determine which half is left/right.
 // This allows you to plug the USB cable into either side of the Iris.
