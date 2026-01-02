@@ -31,7 +31,7 @@ AUDIO_ENABLE = no
 ENCODER_ENABLE = no
 
 # Disables 'Tap Dance', which allows keys to do different things based on how many times they are tapped.
-TAP_DANCE_ENABLE = no
+TAP_DANCE_ENABLE = yes
 
 # Enables the advanced per-key RGB system used by the Iris Rev 6.
 RGB_MATRIX_ENABLE = yes
@@ -44,5 +44,3 @@ LTO_ENABLE = yes
 OS_DETECTION_ENABLE = yes
 
 CAPS_WORD_ENABLE = yes
-
-LAYER_LOCK_ENABLE = yes
