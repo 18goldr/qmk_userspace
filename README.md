@@ -86,33 +86,6 @@ I then ran the following command to generate the hex locally: ` qmk compile -kb 
 ## Flash through QMK-Toolbox
 To flash, hold down the button on the back of the Iris board. This puts it into DFU mode.
 
-
-# Sentences/words to test for fast typing
-I want to...
-Angry
-
-asdfasd
-
-jklpjkplj
-
-Flow
-
-flow
-
-Low
-
-I wonder why I
-
-jjI (vs jjfi)
-
-face (vs Ace)
-
-cd Code
-
 # TODO
 - Add a mouse layer for when i want to work one handed
 - Set second thumb key to control and first thumb key to meta for emacs.
-- I still get fi instead of I a lot when typing fast
-- shift tab results in "f "
-
-I want to

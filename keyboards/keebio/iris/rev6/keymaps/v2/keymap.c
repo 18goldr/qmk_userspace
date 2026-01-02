@@ -157,7 +157,7 @@ uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t* record,
                 return FLOW_TAP_TERM; // allow normal "flow" typing like fl/fr/fa...
         }
     } else if (prev_tap_code == KC_J) {
-        return FLOW_TAP_TERM;
+        return FLOW_TAP_TERM / 2;
 
     // THUMB LAYER PROTECTION (Space)
     } else if (prev_tap_code == KC_SPC) {
