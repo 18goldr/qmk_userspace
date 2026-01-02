@@ -24,3 +24,6 @@
 #define OS_DETECTION_DEBOUNCE 500
 
 #define ONESHOT_TAP_TOGGLE 2  // Tapping this number of times holds the key until tapped once again.
+#define CAPS_WORD_IDLE_TIMEOUT 30000  // 30 seconds
+
+#define GAMING_LAYER_TOGGLE_THRESHOLD 1500 // 1.5 seconds required to toggle to gaming layer

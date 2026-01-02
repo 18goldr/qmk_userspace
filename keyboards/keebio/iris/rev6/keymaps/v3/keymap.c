@@ -7,9 +7,10 @@
 
 
 // Custom Tapping Term: Adjusts how long you must hold a key for it to become a modifier.
-// Improves Home Row Mod accuracy by making index fingers faster and pinkies more deliberate.
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
+        case HOLD_TG_GAME:
+            return GAMING_LAYER_TOGGLE_THRESHOLD;
         case RCTL_T(KC_K):
         case RALT_T(KC_L):
         case RGUI_T(KC_P):
@@ -23,7 +24,6 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
 
 // Custom Keycode Handler: Manages Layer switching and the persistent Alt-Tab macro.
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-	uprintf("ID: %d | P: %u | T: %u\n", keycode, record->event.pressed, record->event.time);
   switch (keycode) {
     // Persistent Layer Changes
     case QWERTY:
@@ -52,15 +52,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       }
       break;
 
-	case TOGG_GAME:
-		if (record->event.pressed) {
-        	toggle_key_pressed = true;
-        	toggle_threshold_met = false; // Reset lock for a new press
-        	toggle_hold_timer = timer_read();
-    	} else {
-       		toggle_key_pressed = false;
-    	}
-    	return false;
+      case HOLD_TG_GAME:
+          if (record->event.pressed) {
+              if (record->tap.count == 0) {
+                  // This triggers if you've held the key past 1500ms
+                  layer_invert(_GAMING);
+                  return false;
+              }
+          }
+          break;
   }
   return true;
 }
@@ -69,16 +69,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 // if you haven't pressed the Alt-Tab keys for 600ms.
 void matrix_scan_user(void) {
   	if (is_alt_tab_active && timer_elapsed(alt_tab_timer) > 600) {
-    	unregister_code(KC_LALT);
-    	is_alt_tab_active = false;
+  	    unregister_code(KC_LALT);
+  	    is_alt_tab_active = false;
   	}
-
-	if (toggle_key_pressed && !toggle_threshold_met) {
-        if (timer_elapsed(toggle_hold_timer) > 1500) { // 1.5 second threshold
-            layer_invert(_GAMING);   // Toggles the gaming layer
-            toggle_threshold_met = true; // Lock the action so it doesn't toggle again
-        }
-    }
 }
 
 void caps_word_set_user(bool active) {

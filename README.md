@@ -89,3 +89,7 @@ To flash, hold down the button on the back of the Iris board. This puts it into 
 # TODO
 - Add a mouse layer for when i want to work one handed
 - Set second thumb key to control and first thumb key to meta for emacs.
+- Add layer lock for nav
+- Add sentence case
+- Disable caps word if use the mouse
+- Enable caps lock if hold caps word
