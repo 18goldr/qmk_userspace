@@ -15,7 +15,7 @@ The difference is that in their example, the tap (quick press) toggles the layer
 # TODO
 - Add a mouse layer for when i want to work one handed
 - Set second thumb key to control and first thumb key to meta for emacs.
-- Disable caps word if use the mouse
+- Disable caps word if use click mouse. This is probably possible because ploopy trackball uses qmk.
 - I think the tap term for nav and sym are too short
 - Test features on mac
 - Stop just including c code in headers...
