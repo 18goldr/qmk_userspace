@@ -16,7 +16,7 @@ The difference is that in their example, the tap (quick press) toggles the layer
 - Add a mouse layer for when i want to work one handed
 - Set second thumb key to control and first thumb key to meta for emacs.
 - Add layer lock for nav
-- Add sentence case
 - Disable caps word if use the mouse
 - I think the tap term for nav and sym are too short
 - Test features on mac
+- When I do kill line then hold control and try to do a different combo or layer or something, it doesn't work

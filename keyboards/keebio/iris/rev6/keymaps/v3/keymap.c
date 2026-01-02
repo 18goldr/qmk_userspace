@@ -44,17 +44,29 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
 
 // Custom Keycode Handler: Manages Layer switching and the persistent Alt-Tab macro.
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-
-    // Ctrl+K => kill line (works even though K is MT(MOD_RCTL, KC_K))
+    // Ctrl+K => kill line (works with MT mods and doesn't "lose" Ctrl afterward)
     if (record->event.pressed && ctrl_is_down()) {
         uint16_t tap_kc = get_tap_keycode(keycode);
         if (tap_kc == KC_K) {
-            // Prevent the app from seeing Ctrl+K
+
+            // Save current modifier state (this is CRITICAL for home-row mods)
+            const uint8_t saved_mods     = get_mods();
+            const uint8_t saved_oneshot  = get_oneshot_mods();
+            const uint8_t saved_weak     = get_weak_mods();
+
+            // Temporarily remove Ctrl so our selection keystrokes aren't modified by Ctrl
             del_mods(MOD_MASK_CTRL);
             del_oneshot_mods(MOD_MASK_CTRL);
+            del_weak_mods(MOD_MASK_CTRL);
 
             kill_line();
-            return false;
+
+            // Restore modifier state so Ctrl still works while you're holding it
+            set_mods(saved_mods);
+            set_oneshot_mods(saved_oneshot);
+            set_weak_mods(saved_weak);
+
+            return false; // swallow the K tap so the OS never sees Ctrl+K
         }
     }
 
