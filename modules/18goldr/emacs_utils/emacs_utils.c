@@ -11,17 +11,21 @@ bool process_detected_host_os_emacs_utils(os_variant_t detected_os) {
 }
 
 bool process_record_emacs_utils(uint16_t keycode, keyrecord_t *record) {
-    // 1. Check Select Region Feature
+#ifdef SELECT_REGION_ENABLE
+    // Check Select Region Feature
     // If it returns false (it handled Ctrl+Space), we stop.
     if (!process_select_region(keycode, record)) {
         return false;
     }
+#endif
 
-    // 2. Check Kill Line Feature
+#ifdef KILL_LINE_ENABLE
+    // Check Kill Line Feature
     // If it returns false (it handled Ctrl+K), we stop.
     if (!process_kill_line(keycode, record, module_os)) {
         return false;
     }
+#endif
 
     // 3. Otherwise, let QMK proceed
     return true;

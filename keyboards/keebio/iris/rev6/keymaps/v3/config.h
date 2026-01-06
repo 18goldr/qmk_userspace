@@ -25,6 +25,3 @@
 #define CAPS_WORD_IDLE_TIMEOUT 30000  // 30 seconds
 
 #define GAMING_LAYER_TOGGLE_THRESHOLD 1500 // 1.5 seconds required to toggle to gaming layer
-
-#define EMACS_SELECT
-#define EMACS_KILL_LINE
