@@ -1,7 +1,7 @@
 {
-  "module_name": "Emacs Utils",
-  "maintainer": "Robbie Gold",
-  "features": {
-    "os_detection": true
-  }
+    "module_name": "Emacs Utils",
+    "maintainer": "18goldr",
+    "features": {
+        "os_detection": true
+    }
 }

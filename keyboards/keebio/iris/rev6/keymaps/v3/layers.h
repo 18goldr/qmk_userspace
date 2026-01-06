@@ -18,10 +18,22 @@ enum custom_keycodes {
   NUM,
   NAV,
   GAMING,
-  PREVWIN, // Custom Alt-Tab (Backward)
-  NEXTWIN, // Custom Alt-Tab (Forward)
   TOGG_GAME
 };
+
+// Tap Dance declarations
+enum {
+    CW_CL,
+};
+
+
+// Tap Dance definitions
+tap_dance_action_t tap_dance_actions[] = {
+    // Tap once for Cap Words, twice for Caps Lock
+    [CW_CL] = ACTION_TAP_DANCE_FN(tap_dance_caps_word_caps_lock),
+};
+
+
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [_QWERTY] = LAYOUT(
@@ -34,7 +46,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //├────────┼────────────────────┼───────────────────┼───────────────────┼───────────────────┼────────────┼─────────┐           ┌────────────────────┴───────────┼───────────────────────┼───────────────────┼───────────────────┼───────────────────────┼────────┼
      KC_TAB,   KC_Z,                   KC_X,                 KC_C,                KC_V,          KC_B,      MO(_FN),             HOLD_TG_GAME,          KC_N,          KC_M,               KC_COMM,              KC_DOT,              KC_SLSH,          KC_BSLS,
   //└────────┴────────────────────┴───────────────────┴───────────────────┬───────────────────┴────────────┴─────────┘           └────────────────────┴───────────┴───────────────────────┴───────────────────┴───────────────────┴───────────────────────┴────────┘
-                                                                             PREVWIN,      OSM(MOD_LSFT), LT(_SYM, KC_ENT),     LT(_NAV, KC_SPC),  OSM(MOD_RSFT),   NEXTWIN
+                                                                             ALT_TAB_PREV,  OSM(MOD_LSFT), LT(_SYM, KC_ENT),     LT(_NAV, KC_SPC),  OSM(MOD_RSFT),   ALT_TAB_NEXT
                                                //                         └──────────────┴─────────────────┴─────────┘           └────────────────────┴────────────┴──────────┘
   ),
 

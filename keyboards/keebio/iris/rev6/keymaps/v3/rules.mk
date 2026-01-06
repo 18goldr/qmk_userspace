@@ -1,5 +1,3 @@
-# Custom Build Options
-
 # Disables the full Bootmagic menu to save space; uses a simpler "Lite" version instead.
 BOOTMAGIC_ENABLE = no
 
@@ -49,4 +47,6 @@ LAYER_LOCK_ENABLE = yes
 
 SELECT_REGION_ENABLE = yes
 
-KILL_REGION_ENABLE = yes
+KILL_LINE_ENABLE = yes
+
+SRC += tap_dance.c

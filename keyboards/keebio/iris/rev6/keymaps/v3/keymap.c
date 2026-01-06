@@ -3,7 +3,10 @@
 #include <keymap_introspection.h>
 
 #include "layers.h"
-#include "state_config.h"
+
+// RGB Colors for layers and caps lock
+uint8_t colourDefault[] = {57, 184, 255}; // Light Blue
+uint8_t colourGaming[]  = {255, 0, 0};    // Red
 
 // Custom Tapping Term: Adjusts how long you must hold a key for it to become a modifier.
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
@@ -31,26 +34,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        // Alt-Tab Macros (Forward and Backward)
-        case NEXTWIN:
-        case PREVWIN:
-            if (record->event.pressed) {
-                if (!is_alt_tab_active) {
-                    is_alt_tab_active = true;
-                    register_code(KC_LALT); // Hold Alt down
-                }
-                alt_tab_timer = timer_read(); // Reset auto-release timer
-                if (keycode == NEXTWIN) {
-                    register_code(KC_TAB);
-                } else {
-                    register_code16(S(KC_TAB)); // Shift+Tab for backward
-                }
-            } else {
-                unregister_code(KC_TAB);
-                unregister_code16(S(KC_TAB));
-            }
-            break;
-
         case HOLD_TG_GAME:
             if (record->event.pressed) {
                 if (record->tap.count == 0) {
@@ -63,15 +46,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             break;
     }
     return true;
-}
-
-// Matrix Scan: Runs constantly. Used here to release the 'Alt' key
-// if you haven't pressed the Alt-Tab keys for 600ms.
-void matrix_scan_user(void) {
-  	if (is_alt_tab_active && timer_elapsed(alt_tab_timer) > 600) {
-  	    unregister_code(KC_LALT);
-  	    is_alt_tab_active = false;
-  	}
 }
 
 #ifdef RGB_MATRIX_ENABLE
@@ -88,7 +62,6 @@ void caps_word_set_user(bool active) {
 // RGB Indicators: Updates the LEDs based on keyboard layer.
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     for (uint8_t i = led_min; i < led_max; i++) {
-        // Layer Colors on Keys only
         switch(get_highest_layer(layer_state|default_layer_state)) {
             case _GAMING:
                 rgb_matrix_set_color(i, colourGaming[0], colourGaming[1], colourGaming[2]);
@@ -102,12 +75,8 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 }
 #endif
 
-/*
 #ifdef OS_DETECTION_ENABLE
-// Callback function that runs automatically when the OS is detected
 bool process_detected_host_os_user(os_variant_t detected_os) {
-    host_os = detected_os;
-
     switch (detected_os) {
         case OS_MACOS:
         case OS_IOS:
@@ -120,4 +89,3 @@ bool process_detected_host_os_user(os_variant_t detected_os) {
     return true;
 }
 #endif
-*/

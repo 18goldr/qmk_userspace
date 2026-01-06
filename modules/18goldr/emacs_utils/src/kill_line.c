@@ -8,9 +8,9 @@ bool process_kill_line(uint16_t keycode, keyrecord_t *record, os_variant_t curre
         if (get_tap_keycode(keycode) == KC_K) {
 
             // Save state
-            const uint8_t saved_mods     = get_mods();
-            const uint8_t saved_oneshot  = get_oneshot_mods();
-            const uint8_t saved_weak     = get_weak_mods();
+            const uint8_t saved_mods = get_mods();
+            const uint8_t saved_oneshot = get_oneshot_mods();
+            const uint8_t saved_weak = get_weak_mods();
 
             // Clear Ctrl so it doesn't interfere
             del_mods(MOD_MASK_CTRL);

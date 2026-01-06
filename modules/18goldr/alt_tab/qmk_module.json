@@ -1,0 +1,12 @@
+{
+    "module_name": "Persistent Alt-Tab",
+    "maintainer": "18goldr",
+    "keycodes": [
+        {
+            "key": "ALT_TAB_NEXT"
+        },
+        {
+            "key": "ALT_TAB_PREV"
+        }
+    ]
+}
