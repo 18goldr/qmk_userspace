@@ -4,8 +4,6 @@
 
 #include "layers.h"
 #include "state_config.h"
-#include "select_region.h"
-#include "kill_line.h"
 
 // Custom Tapping Term: Adjusts how long you must hold a key for it to become a modifier.
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
@@ -17,100 +15,14 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
         case RGUI_T(KC_P):
         case LALT_T(KC_S):
         case LGUI_T(KC_A):
-            return TAPPING_TERM * 2;  // I don't use alt or gui that often
+            return TAPPING_TERM * 2;
         default:
-          return TAPPING_TERM;
-  }
+          	return TAPPING_TERM;
+  	}
 }
 
-
-// Custom Keycode Handler: Manages Layer switching, persistent Alt-Tab macro, kill region and select region.
+// Custom Keycode Handler: Manages Layer switching, persistent Alt-Tab macro
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    // Ctrl+K => kill line (works with MT mods and doesn't "lose" Ctrl afterward)
-    if (record->event.pressed && ctrl_is_down()) {
-        uint16_t tap_kc = get_tap_keycode(keycode);
-        if (tap_kc == KC_K) {
-
-            // Save current modifier state (this is CRITICAL for home-row mods)
-            const uint8_t saved_mods     = get_mods();
-            const uint8_t saved_oneshot  = get_oneshot_mods();
-            const uint8_t saved_weak     = get_weak_mods();
-
-            // Temporarily remove Ctrl so our selection keystrokes aren't modified by Ctrl
-            del_mods(MOD_MASK_CTRL);
-            del_oneshot_mods(MOD_MASK_CTRL);
-            del_weak_mods(MOD_MASK_CTRL);
-
-            kill_line();
-
-            // Restore modifier state so Ctrl still works while you're holding it
-            set_mods(saved_mods);
-            set_oneshot_mods(saved_oneshot);
-            set_weak_mods(saved_weak);
-
-            return false; // swallow the K tap so the OS never sees Ctrl+K
-        }
-    }
-
-    // select region feature
-    if (keycode == LT(_NAV, KC_SPC)) {
-        if (record->event.pressed) {
-            ctrl_space_armed = ctrl_is_down();
-            return true; // let LT logic proceed (tap vs hold decided later)
-        } else {
-            if (ctrl_space_armed && record->tap.count > 0) {
-                // Prevent OS/app from seeing Ctrl+Space
-                del_mods(MOD_MASK_CTRL);
-                del_oneshot_mods(MOD_MASK_CTRL);
-
-                selection_set(!selecting);
-
-                ctrl_space_armed = false;
-                return false; // swallow the tap so Space doesn't emit
-            }
-            ctrl_space_armed = false;
-            return true;
-        }
-    }
-
-    // Always let ESC cancel selection mode (even if ESC is on a layer/mod-tap elsewhere)
-    if (record->event.pressed) {
-        uint16_t tap_kc = get_tap_keycode(keycode);
-        if (tap_kc == KC_ESC && selecting) {
-            selection_set(false);
-            // return true; // allow ESC to still be sent
-        }
-    }
-
-    // ---- Emacs-y: if selection mode is on, typing cancels it ----
-    if (selecting) {
-        uint16_t tap_kc = get_tap_keycode(keycode);
-
-        // Never cancel selection for navigation keys or pure modifiers
-        if (!is_selection_nav(tap_kc) && !IS_MODIFIER_KEYCODE(keycode)) {
-
-            // IMPORTANT FIX:
-            // For Mod-Tap / Layer-Tap typing keys, cancel on PRESS so Shift is released
-            // BEFORE QMK decides/sends the tap character.
-            if (
-                record->event.pressed &&
-                (IS_QK_MOD_TAP(keycode) || IS_QK_LAYER_TAP(keycode)) &&
-                is_typing_key(tap_kc)
-            ) {
-                selection_set(false);
-            }
-
-            // Regular keys: cancel on press if it's a typing key
-            if (
-                record->event.pressed &&
-                !(IS_QK_MOD_TAP(keycode) || IS_QK_LAYER_TAP(keycode)) &&
-                is_typing_key(keycode)
-            ) {
-                selection_set(false);
-            }
-        }
-    }
-
     switch (keycode) {
         // Persistent Layer Changes
         case QWERTY:
@@ -162,6 +74,7 @@ void matrix_scan_user(void) {
   	}
 }
 
+#ifdef RGB_MATRIX_ENABLE
 void caps_word_set_user(bool active) {
     if (active) {
         rgb_matrix_set_color(25, RGB_RED);
@@ -187,7 +100,10 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     }
     return false;
 }
+#endif
 
+/*
+#ifdef OS_DETECTION_ENABLE
 // Callback function that runs automatically when the OS is detected
 bool process_detected_host_os_user(os_variant_t detected_os) {
     host_os = detected_os;
@@ -203,3 +119,5 @@ bool process_detected_host_os_user(os_variant_t detected_os) {
     }
     return true;
 }
+#endif
+*/

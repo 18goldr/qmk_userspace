@@ -1,3 +1,3 @@
 {
-  "modules": ["getreuer/sentence_case"]
+  "modules": ["getreuer/sentence_case", "18goldr/emacs_utils"]
 }

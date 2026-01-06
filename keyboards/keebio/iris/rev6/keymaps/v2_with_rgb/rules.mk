@@ -31,19 +31,14 @@ AUDIO_ENABLE = no
 ENCODER_ENABLE = no
 
 # Disables 'Tap Dance', which allows keys to do different things based on how many times they are tapped.
-TAP_DANCE_ENABLE = yes
+TAP_DANCE_ENABLE = no
 
 # Enables the advanced per-key RGB system used by the Iris Rev 6.
-RGB_MATRIX_ENABLE = no
+RGB_MATRIX_ENABLE = yes
 
 # Enables Link Time Optimization. This significantly reduces the size of your
 # compiled firmware so it fits on the chip's limited memory.
 LTO_ENABLE = yes
 
 # Enables ability to detect OS on the fly (ie. mac vs windows)
-OS_DETECTION_ENABLE = yes
-
-CAPS_WORD_ENABLE = yes
-
-LAYER_LOCK_ENABLE = yes
-
+OS_DETECTION_ENABLE = no
