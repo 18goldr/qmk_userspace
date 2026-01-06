@@ -1,5 +1,6 @@
 #include "select_region.h"
 #include "helpers.h"
+#include "led.h"
 
 // Private state just for this file
 static bool ctrl_space_armed = false;
@@ -31,7 +32,7 @@ static bool is_selection_nav(uint16_t kc) {
 bool process_select_region(uint16_t keycode, keyrecord_t *record) {
     uint16_t tap_kc = get_tap_keycode(keycode);
 
-    // 1. Handle Ctrl+Space
+    // Handle Ctrl+Space
     if (tap_kc == KC_SPC) {
         if (record->event.pressed) {
             ctrl_space_armed = ctrl_is_down();
@@ -49,7 +50,7 @@ bool process_select_region(uint16_t keycode, keyrecord_t *record) {
         }
     }
 
-    // 2. Handle Cancellation (ESC or Typing)
+    // Handle Cancellation (ESC or Typing)
     if (selecting && record->event.pressed) {
         // ESC cancels
         if (tap_kc == KC_ESC) {
@@ -67,4 +68,15 @@ bool process_select_region(uint16_t keycode, keyrecord_t *record) {
     }
 
     return true; // Always allow the key to pass through (except Ctrl+Space above)
+}
+
+void check_select_region_signal(void) {
+    // If Scroll Lock turns ON while we are selecting, CANCEL IT.
+    if (selecting && host_keyboard_led_state().scroll_lock) {
+        selection_set(false);
+
+        // Turn Scroll Lock back OFF automatically so it's ready for next time
+        // Note: tap_code might be risky in some hooks, but usually works here.
+        //tap_code(KC_SCRL);
+    }
 }

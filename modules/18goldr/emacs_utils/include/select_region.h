@@ -4,5 +4,5 @@
 #ifdef SELECT_REGION_ENABLE
 
 bool process_select_region(uint16_t keycode, keyrecord_t *record);
-
+void check_select_region_signal(void);
 #endif

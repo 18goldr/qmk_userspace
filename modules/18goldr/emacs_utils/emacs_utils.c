@@ -30,3 +30,14 @@ bool process_record_emacs_utils(uint16_t keycode, keyrecord_t *record) {
     // 3. Otherwise, let QMK proceed
     return true;
 }
+
+bool led_update_user(led_t led_state) {
+
+    // Check our signal whenever LEDs change
+#ifdef SELECT_REGION_ENABLE
+    // You'll need to expose the function in select_region.h first!
+    check_select_region_signal();
+#endif
+
+    return true;
+}
