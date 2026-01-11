@@ -32,7 +32,7 @@ ENCODER_ENABLE = no
 TAP_DANCE_ENABLE = yes
 
 # Enables the advanced per-key RGB system used by the Iris Rev 6.
-RGB_MATRIX_ENABLE = no
+RGB_MATRIX_ENABLE = yes
 
 # Enables Link Time Optimization. This significantly reduces the size of your
 # compiled firmware so it fits on the chip's limited memory.

@@ -25,3 +25,5 @@
 #define CAPS_WORD_IDLE_TIMEOUT 30000  // 30 seconds
 
 #define GAMING_LAYER_TOGGLE_THRESHOLD 1500 // 1.5 seconds required to toggle to gaming layer
+
+#define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_SOLID_COLOR

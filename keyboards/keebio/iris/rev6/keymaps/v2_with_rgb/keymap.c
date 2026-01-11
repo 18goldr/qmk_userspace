@@ -86,7 +86,7 @@ void matrix_scan_user(void) {
     }
 }
 
-
+/*
 // RGB Indicators: Updates the LEDs based on keyboard state.
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
   // Caps Lock Indicator
@@ -108,6 +108,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
   }
   return false;
 }
+*/
 
 /*
 // Callback function that runs automatically when the OS is detected
@@ -124,3 +125,15 @@ bool process_detected_host_os_user(os_variant_t detected_os) {
     return true;
 }
 */
+
+void keyboard_post_init_user(void) {
+    // 1. Force the mode to "Solid Color" (Safe, low power)
+    rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
+
+    // 2. Force the Color to Red and Brightness to LOW (50 out of 255)
+    // Format is: (Hue, Saturation, Value/Brightness)
+    rgb_matrix_sethsv_noeeprom(0, 255, 255);
+
+    // Call the system defaults just in case
+    // (If your file already had this function, keep the old contents too!)
+}

@@ -48,32 +48,37 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
+
 #ifdef RGB_MATRIX_ENABLE
-void caps_word_set_user(bool active) {
-    if (active) {
-        rgb_matrix_set_color(25, RGB_RED);
-        rgb_matrix_set_color(12, RGB_RED);
-    } else {
-        rgb_matrix_set_color(25, colourDefault[0], colourDefault[1], colourDefault[2]);
-        rgb_matrix_set_color(12, colourDefault[0], colourDefault[1], colourDefault[2]);
+layer_state_t layer_state_set_user(layer_state_t state) {
+
+    // Check which layer is active
+    switch (get_highest_layer(state)) {
+        case _GAMING:
+            // Set ENTIRE keyboard to Gaming Color (Efficient!)
+            // Format: (Hue, Saturation, Value)
+            rgb_matrix_sethsv_noeeprom(0, 255, 100); // Red
+            break;
+
+        default:
+            // Set ENTIRE keyboard back to Default Color
+            rgb_matrix_sethsv_noeeprom(128, 255, 100); // Teal
+            break;
     }
+
+    return state;
 }
 
-// RGB Indicators: Updates the LEDs based on keyboard layer.
-bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    for (uint8_t i = led_min; i < led_max; i++) {
-        switch(get_highest_layer(layer_state|default_layer_state)) {
-            case _GAMING:
-                rgb_matrix_set_color(i, colourGaming[0], colourGaming[1], colourGaming[2]);
-                break;
-            default:
-                rgb_matrix_set_color(i, colourDefault[0], colourDefault[1], colourDefault[2]);
-                break;
-        }
-    }
-    return false;
+void keyboard_post_init_user(void) {
+    // Force the mode to Solid Color so it doesn't use the heavy "Indicator" logic
+    rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
+
+    // Turn them ON to the default color immediately
+    rgb_matrix_enable_noeeprom(); // Ensure the system is actually on
+    rgb_matrix_sethsv_noeeprom(128, 255, 100); // Teal (Default)
 }
 #endif
+
 
 #ifdef OS_DETECTION_ENABLE
 bool process_detected_host_os_user(os_variant_t detected_os) {
