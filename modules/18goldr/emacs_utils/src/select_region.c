@@ -3,7 +3,7 @@
 #include "led.h"
 
 // Private state just for this file
-static bool ctrl_space_armed = false;
+static bool primary_space_armed = false;
 
 
 static bool is_typing_key(uint16_t kc) {
@@ -35,17 +35,17 @@ bool process_select_region(uint16_t keycode, keyrecord_t *record) {
     // Handle Ctrl+Space
     if (tap_kc == KC_SPC) {
         if (record->event.pressed) {
-            ctrl_space_armed = ctrl_is_down();
+            primary_space_armed = primary_mod_is_down();
             return true;
         } else {
-            if (ctrl_space_armed && record->tap.count > 0) {
+            if (primary_space_armed && record->tap.count > 0) {
                 del_mods(MOD_MASK_CTRL);
                 del_oneshot_mods(MOD_MASK_CTRL);
                 selection_set(!selecting);
-                ctrl_space_armed = false;
+                primary_space_armed = false;
                 return false; // Swallow the release
             }
-            ctrl_space_armed = false;
+            primary_space_armed = false;
             return true;
         }
     }

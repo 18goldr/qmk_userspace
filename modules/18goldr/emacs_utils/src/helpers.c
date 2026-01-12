@@ -1,12 +1,20 @@
 #include "helpers.h"
+#include "os_detection.h"
 
 bool selecting = false;
 
-bool ctrl_is_down(void) {
-    // We check all modification states to be safe
+os_variant_t module_os = OS_UNSURE;
+
+inline bool primary_mod_is_down(void) {
     uint8_t mods = get_mods() | get_oneshot_mods() | get_weak_mods();
-    return mods & MOD_MASK_CTRL;
+
+    if (module_os == OS_MACOS || module_os == OS_IOS) {
+        return mods & MOD_MASK_GUI;   // use GUI on macOS
+    } else {
+        return mods & MOD_MASK_CTRL;  // use CTRL on Windows/Linux
+    }
 }
+
 
 void selection_set(bool on) {
     selecting = on;

@@ -4,7 +4,7 @@
 // The main processing function for this feature
 bool process_kill_line(uint16_t keycode, keyrecord_t *record, os_variant_t current_os) {
     // Check for Ctrl + K
-    if (record->event.pressed && ctrl_is_down()) {
+    if (record->event.pressed && primary_mod_is_down()) {
         if (get_tap_keycode(keycode) == KC_K) {
 
             // Save state

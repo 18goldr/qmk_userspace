@@ -2,8 +2,7 @@
 #include "os_detection.h"
 #include "kill_line.h"
 #include "select_region.h"
-
-static os_variant_t module_os = OS_UNSURE;
+#include "helpers.h"
 
 bool process_detected_host_os_emacs_utils(os_variant_t detected_os) {
     module_os = detected_os;
