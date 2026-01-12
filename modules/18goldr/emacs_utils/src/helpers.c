@@ -14,13 +14,3 @@ inline bool primary_mod_is_down(void) {
         return mods & MOD_MASK_CTRL;  // use CTRL on Windows/Linux
     }
 }
-
-
-void selection_set(bool on) {
-    selecting = on;
-    if (selecting) {
-        register_code(KC_LSFT);     // Hold Shift
-    } else {
-        unregister_code(KC_LSFT);   // Release Shift
-    }
-}

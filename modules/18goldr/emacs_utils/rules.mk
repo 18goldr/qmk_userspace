@@ -19,3 +19,5 @@ endif
 ifneq ($(strip $(KILL_LINE_ENABLE)$(SELECT_REGION_ENABLE)),)
     SRC += $(MODULE_PATH)src/helpers.c
 endif
+
+CONSOLE_ENABLE = yes

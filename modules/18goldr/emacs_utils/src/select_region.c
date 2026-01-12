@@ -1,8 +1,8 @@
 #include "select_region.h"
 #include "helpers.h"
 #include "led.h"
-
-// Private state just for this file
+#include "print.h"
+sa
 static bool primary_space_armed = false;
 
 
@@ -23,6 +23,7 @@ static bool is_selection_nav(uint16_t kc) {
     switch (kc) {
         case KC_LEFT: case KC_RGHT: case KC_UP: case KC_DOWN:
         case KC_HOME: case KC_END: case KC_PGUP: case KC_PGDN:
+        case LCTL(KC_RIGHT): case LCTL(KC_LEFT):
             return true;
         default: return false;
     }
@@ -39,9 +40,7 @@ bool process_select_region(uint16_t keycode, keyrecord_t *record) {
             return true;
         } else {
             if (primary_space_armed && record->tap.count > 0) {
-                del_mods(MOD_MASK_CTRL);
-                del_oneshot_mods(MOD_MASK_CTRL);
-                selection_set(!selecting);
+                selecting = !selecting;
                 primary_space_armed = false;
                 return false; // Swallow the release
             }
@@ -54,7 +53,7 @@ bool process_select_region(uint16_t keycode, keyrecord_t *record) {
     if (selecting && record->event.pressed) {
         // ESC cancels
         if (tap_kc == KC_ESC) {
-            selection_set(false);
+            selecting = false;
         }
         // Typing cancels
         else if (!is_selection_nav(tap_kc) && !IS_MODIFIER_KEYCODE(keycode)) {
@@ -62,21 +61,23 @@ bool process_select_region(uint16_t keycode, keyrecord_t *record) {
             bool is_reg_typing = !(IS_QK_MOD_TAP(keycode) || IS_QK_LAYER_TAP(keycode)) && is_typing_key(keycode);
 
             if (is_mt_typing || is_reg_typing) {
-                selection_set(false);
+                selecting = false;
             }
+        }
+        else if (is_selection_nav(tap_kc)) {
+
+            // Word-jump nav (Ctrl+Arrow)
+            if (keycode == LCTL(KC_LEFT) || keycode == LCTL(KC_RIGHT)) {
+                tap_code16(S(keycode));   // Shift + Ctrl + Arrow
+            }
+            // Plain nav
+            else {
+                tap_code16(S(tap_kc));    // Shift + Arrow/Home/End/etc
+            }
+
+            return false;
         }
     }
 
     return true; // Always allow the key to pass through (except Ctrl+Space above)
-}
-
-void check_select_region_signal(void) {
-    // If Scroll Lock turns ON while we are selecting, CANCEL IT.
-    if (selecting && host_keyboard_led_state().scroll_lock) {
-        selection_set(false);
-
-        // Turn Scroll Lock back OFF automatically so it's ready for next time
-        // Note: tap_code might be risky in some hooks, but usually works here.
-        tap_code(KC_SCRL);
-    }
 }

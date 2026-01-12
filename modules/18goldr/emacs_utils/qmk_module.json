@@ -2,6 +2,7 @@
     "module_name": "Emacs Utils",
     "maintainer": "18goldr",
     "features": {
-        "os_detection": true
+        "os_detection": true,
+        "console_enable": true
     }
 }

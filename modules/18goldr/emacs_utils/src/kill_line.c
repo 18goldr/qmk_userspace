@@ -34,7 +34,7 @@ bool process_kill_line(uint16_t keycode, keyrecord_t *record, os_variant_t curre
 // The actual action
 void kill_line(os_variant_t current_os) {
     if (selecting) {
-        selection_set(false);
+        selecting = false;
     }
     if (current_os == OS_MACOS || current_os == OS_IOS) {
         tap_code16(S(G(KC_RGHT)));
