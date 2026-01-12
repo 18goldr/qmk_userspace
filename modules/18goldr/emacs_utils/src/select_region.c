@@ -77,6 +77,6 @@ void check_select_region_signal(void) {
 
         // Turn Scroll Lock back OFF automatically so it's ready for next time
         // Note: tap_code might be risky in some hooks, but usually works here.
-        //tap_code(KC_SCRL);
+        tap_code(KC_SCRL);
     }
 }
